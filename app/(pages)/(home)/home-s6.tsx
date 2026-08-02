@@ -35,7 +35,7 @@ export default function HomeS6() {
             onSubmit={handleSubmit}
             className="flex w-full flex-col gap-3 sm:flex-row lg:w-auto"
           >
-            <div className="relative w-full sm:w-[320px] md:w-[360px]">
+            <div className="relative w-full sm:w-[320px] md:w-90">
               <Input
                 type="email"
                 placeholder="Email của bạn..."
@@ -48,7 +48,7 @@ export default function HomeS6() {
 
             <Button
               type="submit"
-              className="h-12 rounded-2xl bg-(--primaryCus) px-7 text-sm font-semibold text-white transition-all duration-200 hover:bg-[#e02547] active:scale-95"
+              className="h-12 rounded-2xl bg-(--primaryCus) px-7 text-sm font-semibold text-white transition-all duration-200 hover:bg-(--primaryHov) active:scale-95"
             >
               Đăng ký
             </Button>

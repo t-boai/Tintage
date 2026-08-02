@@ -1,4 +1,4 @@
-import { headerMenuConfig } from "@/app/config/headerMenu.config";
+import { headerMenuConfig } from "@/config/headerMenu.config";
 import Link from "next/link";
 
 export default function HeaderMenu() {
