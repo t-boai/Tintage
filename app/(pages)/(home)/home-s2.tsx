@@ -75,6 +75,7 @@ export default function HomeS2() {
               src={cat.image}
               alt={cat.name}
               fill
+              sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
             />
 

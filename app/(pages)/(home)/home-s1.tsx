@@ -113,6 +113,7 @@ export default function HomeS1() {
                   src={slide.image}
                   alt={slide.alt}
                   fill
+                  sizes="100vw"
                   priority={slide.id === 1}
                   className="object-cover"
                 />

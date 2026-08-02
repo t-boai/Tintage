@@ -77,6 +77,7 @@ export default function HomeS5() {
                 src={article.image}
                 alt={article.title}
                 fill
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
             </div>

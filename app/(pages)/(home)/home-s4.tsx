@@ -145,6 +145,7 @@ export default function HomeS4() {
                 src={item.image}
                 alt={item.title}
                 fill
+                sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
               />
 
@@ -165,6 +166,7 @@ export default function HomeS4() {
                       alt={item.sellerName}
                       fill
                       className="object-cover"
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
                     />
                   </div>
                   <span className="max-w-25 truncate">{item.sellerName}</span>

@@ -105,6 +105,7 @@ export default function AuthModal({
             src="/cate-clothes.jpg"
             alt="Tintage Background"
             fill
+            sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
             className="-z-20 object-cover"
           />
           <div className="absolute inset-0 -z-10 bg-black/10 backdrop-blur-md" />

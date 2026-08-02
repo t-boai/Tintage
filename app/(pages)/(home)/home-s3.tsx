@@ -118,6 +118,7 @@ export default function HomeS3() {
                   src={product.image}
                   alt={product.name}
                   fill
+                  sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
                   className="object-cover transition-transform duration-500 group-hover:scale-105"
                 />
 
