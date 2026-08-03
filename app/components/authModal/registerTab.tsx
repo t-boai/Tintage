@@ -54,7 +54,7 @@ export default function RegisterTab({ onSuccess }: RegisterTabProps) {
       // api
       const res = await http.post<AuthResponse>("/user/register", data);
 
-      if (res.token) localStorage.setItem("token", res.token);
+      if (res.accessToken) localStorage.setItem("accessToken", res.accessToken);
       registerForm.reset();
       toast.add({
         type: "success",
