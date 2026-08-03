@@ -1,4 +1,4 @@
-import { headerIconsConfig } from "@/config/headerIcons.config";
+import { headerIconsConfig } from "@/app/config/headerIcons.config";
 
 export default function HeaderIcons() {
   return (

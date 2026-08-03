@@ -13,7 +13,7 @@ const validateEmailOrPhone = (val: string) =>
   REGEX_PATTERNS.EMAIL.test(val) || REGEX_PATTERNS.PHONE.test(val);
 
 export const loginSchema = z.object({
-  identifier: z
+  email: z
     .string()
     .trim()
     .min(1, "Vui lòng nhập Email hoặc SĐT")
@@ -28,7 +28,7 @@ export const registerSchema = z
       .trim()
       .min(2, "Họ tên phải từ 2 ký tự trở lên")
       .max(50, "Họ tên quá dài"),
-    identifier: z
+    email: z
       .string()
       .trim()
       .min(1, "Vui lòng nhập Email hoặc SĐT")

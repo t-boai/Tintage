@@ -4,6 +4,9 @@ import "./globals.css";
 import Header from "@/app/components/header/header";
 import Footer from "@/app/components/footer/footer";
 
+// Shad
+import { Toaster } from "@/components/ui/toast";
+
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
   display: "swap",
@@ -24,6 +27,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <Header />
         <main className="container mx-auto">{children}</main>
+        <Toaster />
         <Footer />
       </body>
     </html>

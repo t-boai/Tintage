@@ -34,9 +34,15 @@ export default function Header() {
         <Link href="/">
           <Image src={Logo} alt="Oke" priority className="h-auto w-[10vw]" />
         </Link>
+
         <HeaderMenu />
+
         <SearchHeader />
-        <span className="cursor-pointer font-semibold">Tin nhắn</span>
+
+        <Link href="#" className="cursor-pointer font-semibold">
+          Tin nhắn
+        </Link>
+
         <HeaderIcons />
 
         <HoverCard>

@@ -162,7 +162,6 @@
 }
 
 @utility box-shadow {
-  /* box-shadow: rgba(17, 17, 26, 0.1) 0px 1px 0px; */
   box-shadow:
     rgba(14, 63, 126, 0.06) 0px 0px 0px 1px,
     rgba(42, 51, 70, 0.03) 0px 1px 1px -0.5px,
