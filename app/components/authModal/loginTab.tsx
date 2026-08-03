@@ -4,7 +4,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as React from "react";
-import { Router } from "next/router";
 import { useRouter } from "next/navigation";
 
 // Validate
@@ -25,7 +24,11 @@ import { http } from "@/lib/httpClient";
 // Interface
 import { AuthResponse } from "@/app/interfaces/user.interfaces";
 
-export default function LoginTab() {
+interface LoginTabProps {
+  onSuccess?: () => void;
+}
+
+export default function LoginTab({ onSuccess }: LoginTabProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const router = useRouter();
 
@@ -42,8 +45,6 @@ export default function LoginTab() {
       // api
       const res = await http.post<AuthResponse>("user/login", data);
 
-      console.log(res);
-
       if (res.accessToken) localStorage.setItem("accessToken", res.accessToken);
       loginForm.reset();
 
@@ -51,6 +52,8 @@ export default function LoginTab() {
         type: "success",
         description: res.message || "Đăng nhập thành công <3",
       });
+
+      if (onSuccess) onSuccess();
 
       router.refresh();
     } catch (error) {

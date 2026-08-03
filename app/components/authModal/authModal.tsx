@@ -15,7 +15,6 @@ import { FacebookIcon, GoogleIcon } from "@/app/config/iconsSvg.config";
 import LoginTab from "@/app/components/authModal/loginTab";
 import RegisterTab from "@/app/components/authModal/registerTab";
 import { AuthModalProps } from "@/app/interfaces/authModal.interfaces";
-import { unknown } from "zod/v4";
 
 export default function AuthModal({
   isOpen,
@@ -34,9 +33,6 @@ export default function AuthModal({
 
   const handleTabChange = (tab: "login" | "register") => {
     setActiveTab(tab);
-    // setFocusedInput(null);
-    // loginForm.reset();
-    // registerForm.reset();
   };
 
   return (
@@ -100,7 +96,7 @@ export default function AuthModal({
             <div className="mt-6">
               {activeTab === "login" ? (
                 /* Login Tab */
-                <LoginTab />
+                <LoginTab onSuccess={onClose} />
               ) : (
                 /* Register Tab */
                 <RegisterTab onSuccess={() => handleTabChange("login")} />
