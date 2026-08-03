@@ -6,7 +6,7 @@ export interface UserResponse {
 
 // cấu trúc  của API Đăng ký / Đăng nhập
 export interface AuthResponse {
-  token: string;
+  accessToken: string;
   user: UserResponse;
   message: string;
 }

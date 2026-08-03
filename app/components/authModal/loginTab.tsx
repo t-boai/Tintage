@@ -1,3 +1,12 @@
+"use client";
+
+//
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as React from "react";
+import { Router } from "next/router";
+import { useRouter } from "next/navigation";
+
 // Validate
 import {
   LoginFormValues,
@@ -6,21 +15,57 @@ import {
 
 // Shad
 import { Label } from "@/components/ui/label";
-import { Button, Input } from "@base-ui/react";
+import { toast } from "@/components/ui/toast";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-//
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+// lib
+import { http } from "@/lib/httpClient";
+
+// Interface
+import { AuthResponse } from "@/app/interfaces/user.interfaces";
 
 export default function LoginTab() {
+  const [isLoading, setIsLoading] = React.useState(false);
+  const router = useRouter();
+
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
     mode: "onChange",
   });
 
-  const onLoginSubmit = (data: LoginFormValues) => {
-    console.log("Submit Đăng nhập:", data);
+  const onLoginSubmit = async (data: LoginFormValues) => {
+    try {
+      setIsLoading(true);
+
+      // api
+      const res = await http.post<AuthResponse>("user/login", data);
+
+      console.log(res);
+
+      if (res.accessToken) localStorage.setItem("accessToken", res.accessToken);
+      loginForm.reset();
+
+      toast.add({
+        type: "success",
+        description: res.message || "Đăng nhập thành công <3",
+      });
+
+      router.refresh();
+    } catch (error) {
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : "Đăng nhập thất bại, vui lòng kiểm tra lại thông tin.";
+
+      toast.add({
+        type: "error",
+        description: errorMessage,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -95,6 +140,7 @@ export default function LoginTab() {
       </div>
 
       <Button
+        disabled={isLoading}
         type="submit"
         className="hover:transitionCus mt-2 h-11 w-full cursor-pointer rounded-xl bg-(--primaryCus) text-sm font-semibold text-white shadow-sm transition-all hover:bg-(--primaryHov) active:scale-[0.99]"
       >
