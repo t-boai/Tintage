@@ -5,17 +5,87 @@ interface FetchOptions extends RequestInit {
   headers?: Record<string, string>;
 }
 
-// Hàm core xử lý request chung
+//  Hàm dịch token JWT để lấy thời gian hết hạn
+function parseJwt(token: string) {
+  try {
+    const base64Url = token.split(".")[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      window
+        .atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join(""),
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    return null;
+  }
+}
 
+// Biến giữ trạng thái Promise để tránh trường hợp gọi Refresh Token API nhiều lần cùng lúc
+let refreshTokenPromise: Promise<string | null> | null = null;
+
+// Hàm lấy Token (Tự động gia hạn nếu sắp hết hạn)
+async function getValidAccessToken(): Promise<string | null> {
+  if (typeof window === "undefined") return null;
+
+  const currentToken = localStorage.getItem("accessToken");
+  if (!currentToken) return null;
+
+  const decoded = parseJwt(currentToken);
+  if (!decoded || !decoded.exp) return currentToken;
+
+  const currentTime = Math.floor(Date.now() / 1000);
+  const timeToExpire = decoded.exp - currentTime;
+
+  // Nếu token còn sống hơn 2 phút , trả về để dùng
+  if (timeToExpire > 120) {
+    return currentToken;
+  }
+
+  // NẾU sắp hết hạn
+  // Nếu đã có 1 request khác đang đi xin token mới rồi, thì đợi ké kết quả của nó
+  if (refreshTokenPromise) {
+    return await refreshTokenPromise;
+  }
+
+  // quá trình gọi API xin Token mới
+  refreshTokenPromise = fetch(`${API_BASE_URL}/auth/refresh-token`, {
+    method: "POST",
+    credentials: "include",
+  })
+    .then(async (res) => {
+      if (!res.ok) throw new Error("Phiên bản hết hạn");
+      const data = await res.json();
+
+      if (data.accessToken) {
+        localStorage.setItem("accessToken", data.accessToken);
+        return data.accessToken;
+      }
+      return null;
+    })
+    .catch((error) => {
+      // Nếu Refresh Token cũng hết hạn hoặc lỗi -> đưa về trang login
+      console.warn("Refresh Token thất bại:", error);
+      localStorage.removeItem("accessToken");
+      window.location.href = "/"; // Force đăng nhập lại
+      return null;
+    })
+    .finally(() => {
+      refreshTokenPromise = null;
+    });
+
+  return await refreshTokenPromise;
+}
+
+// Hàm core xử lý request chung
 async function httpRequest<T>(
   endpoint: string,
   options: FetchOptions = {},
 ): Promise<T> {
-  // Lấy token từ localStorage
-  let token: string | null = null;
-  if (typeof window !== "undefined") {
-    token = localStorage.getItem("accessToken");
-  }
+  // Lấy token
+  const token = await getValidAccessToken();
 
   // chuẩn hóa path
   const normalizedPath = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
