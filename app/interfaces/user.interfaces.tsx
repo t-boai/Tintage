@@ -1,12 +1,14 @@
 //  thông tin User trả về từ API
-export interface UserResponse {
+export interface User {
+  id: string;
   fullName: string;
-  identifier: string;
+  email: string;
+  avatar?: string;
 }
 
 // cấu trúc  của API Đăng ký / Đăng nhập
 export interface AuthResponse {
   accessToken: string;
-  user: UserResponse;
+  user: User;
   message: string;
 }

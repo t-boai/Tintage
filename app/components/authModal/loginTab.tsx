@@ -24,6 +24,10 @@ import { http } from "@/lib/httpClient";
 // Interface
 import { AuthResponse } from "@/app/interfaces/user.interfaces";
 
+// Redux
+import { useAppDispatch } from "@/app/redux/hook";
+import { setUser } from "@/app/redux/slices/authSlice";
+
 interface LoginTabProps {
   onSuccess?: () => void;
 }
@@ -31,6 +35,7 @@ interface LoginTabProps {
 export default function LoginTab({ onSuccess }: LoginTabProps) {
   const [isLoading, setIsLoading] = React.useState(false);
   const router = useRouter();
+  const dispatch = useAppDispatch();
 
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -52,6 +57,8 @@ export default function LoginTab({ onSuccess }: LoginTabProps) {
         type: "success",
         description: res.message || "Đăng nhập thành công <3",
       });
+
+      dispatch(setUser(res.user));
 
       if (onSuccess) onSuccess();
 

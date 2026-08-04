@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import Logo from "@/public/logo-Tintage.png";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 // Components
 import HeaderMenu from "@/app/components/header/headerMenu";
@@ -18,10 +18,15 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
+import { useAppSelector } from "@/app/redux/hook";
 
 export default function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
+
+  const { user, isAuthenticated, isLoading } = useAppSelector(
+    (state) => state.auth,
+  );
 
   const handleOpenAuth = (tab: "login" | "register") => {
     setAuthTab(tab);
@@ -45,24 +50,32 @@ export default function Header() {
 
         <HeaderIcons />
 
-        <HoverCard>
-          <HoverCardTrigger
-            delay={10}
-            closeDelay={100}
-            render={
-              <Button
-                className="transitionCus cursor-pointer border bg-(--primaryCus) text-white hover:border-(--primaryCus) hover:text-(--primaryCus)"
-                variant="outline"
-                onClick={() => handleOpenAuth("login")}
-              >
-                Đăng bán
-              </Button>
-            }
-          />
-          <HoverCardContent className="flex w-64 flex-col gap-0.5">
-            <div>Hãy trở thành một người bán hàng </div>
-          </HoverCardContent>
-        </HoverCard>
+        {isLoading ? (
+          <div className="h-9 w-24 animate-pulse rounded-xl bg-neutral-200" />
+        ) : isAuthenticated && user ? (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium">{user.fullName}</span>
+          </div>
+        ) : (
+          <HoverCard>
+            <HoverCardTrigger
+              delay={10}
+              closeDelay={100}
+              render={
+                <Button
+                  className="transitionCus cursor-pointer border bg-(--primaryCus) text-white hover:border-(--primaryCus) hover:text-(--primaryCus)"
+                  variant="outline"
+                  onClick={() => handleOpenAuth("login")}
+                >
+                  Đăng nhập
+                </Button>
+              }
+            />
+            <HoverCardContent className="flex w-64 flex-col gap-0.5">
+              <div>Đăng nhập hoặc tạo tài khoản miễn phí.</div>
+            </HoverCardContent>
+          </HoverCard>
+        )}
 
         <AuthModal
           isOpen={isAuthOpen}
