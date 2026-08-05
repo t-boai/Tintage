@@ -3,30 +3,18 @@
 import Image from "next/image";
 import Link from "next/link";
 import Logo from "@/public/logo-Tintage.png";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 // Components
 import HeaderMenu from "@/app/components/header/headerMenu";
 import SearchHeader from "@/app/components/searchHeader/searchHeader";
 import HeaderIcons from "@/app/components/header/headerIcon";
 import AuthModal from "@/app/components/authModal/authModal";
-
-// Shad
-import { Button } from "@/components/ui/button";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "@/components/ui/hover-card";
-import { useAppSelector } from "@/app/redux/hook";
+import HeaderLogin from "@/app/components/header/headerLogin";
 
 export default function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
-
-  const { user, isAuthenticated, isLoading } = useAppSelector(
-    (state) => state.auth,
-  );
 
   const handleOpenAuth = (tab: "login" | "register") => {
     setAuthTab(tab);
@@ -34,10 +22,15 @@ export default function Header() {
   };
 
   return (
-    <header className="box-shadow t-0 l-0 fixed z-50 w-full bg-white">
+    <header className="box-shadow t-0 l-0 sticky top-0 left-0 z-50 w-full transform-gpu bg-white">
       <div className="container mx-auto my-5 flex items-center justify-between">
         <Link href="/">
-          <Image src={Logo} alt="Oke" priority className="h-auto w-[10vw]" />
+          <Image
+            src={Logo}
+            alt="Logo Tintage"
+            priority
+            className="h-auto w-[10vw]"
+          />
         </Link>
 
         <HeaderMenu />
@@ -50,32 +43,7 @@ export default function Header() {
 
         <HeaderIcons />
 
-        {isLoading ? (
-          <div className="h-9 w-24 animate-pulse rounded-xl bg-neutral-200" />
-        ) : isAuthenticated && user ? (
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">{user.fullName}</span>
-          </div>
-        ) : (
-          <HoverCard>
-            <HoverCardTrigger
-              delay={10}
-              closeDelay={100}
-              render={
-                <Button
-                  className="transitionCus cursor-pointer border bg-(--primaryCus) text-white hover:border-(--primaryCus) hover:text-(--primaryCus)"
-                  variant="outline"
-                  onClick={() => handleOpenAuth("login")}
-                >
-                  Đăng nhập
-                </Button>
-              }
-            />
-            <HoverCardContent className="flex w-64 flex-col gap-0.5">
-              <div>Đăng nhập hoặc tạo tài khoản miễn phí.</div>
-            </HoverCardContent>
-          </HoverCard>
-        )}
+        <HeaderLogin handleOpenAuth={handleOpenAuth} />
 
         <AuthModal
           isOpen={isAuthOpen}
