@@ -24,11 +24,13 @@ export default function AuthModal({
   const [activeTab, setActiveTab] = React.useState<"login" | "register">(
     defaultTab,
   );
-  const [prevDefaultTab, setPrevDefaultTab] = React.useState(defaultTab);
+  const [prevIsOpen, setPrevIsOpen] = React.useState(isOpen);
 
-  if (prevDefaultTab !== defaultTab) {
-    setPrevDefaultTab(defaultTab);
-    setActiveTab(defaultTab);
+  if (isOpen !== prevIsOpen) {
+    setPrevIsOpen(isOpen);
+    if (isOpen) {
+      setActiveTab(defaultTab);
+    }
   }
 
   const handleTabChange = (tab: "login" | "register") => {

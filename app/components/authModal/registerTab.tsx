@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import * as React from "react";
 
 // Helper
@@ -18,11 +18,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 
-// lib
-import { http } from "@/lib/httpClient";
-
-// Interfaces
-import { AuthResponse } from "@/app/interfaces/user.interfaces";
+// services
+import { authService } from "@/app/services/authService";
 
 interface RegisterTabProps {
   onSuccess: () => void;
@@ -32,7 +29,13 @@ export default function RegisterTab({ onSuccess }: RegisterTabProps) {
   const [focusedInput, setFocusedInput] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  const registerForm = useForm<RegisterFormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    control,
+    formState: { errors },
+  } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       fullName: "",
@@ -43,27 +46,28 @@ export default function RegisterTab({ onSuccess }: RegisterTabProps) {
     mode: "onChange",
   });
 
-  const reEmail = registerForm.watch("email") || "";
-  const regPassword = registerForm.watch("password") || "";
-  const regConfirmPassword = registerForm.watch("confirmPassword") || "";
+  const reEmail = useWatch({ control, name: "email" }) || "";
+  const regPassword = useWatch({ control, name: "password" }) || "";
+  const regConfirmPassword =
+    useWatch({ control, name: "confirmPassword" }) || "";
 
   const onRegisterSubmit = async (data: RegisterFormValues) => {
     try {
       setIsLoading(true);
 
       // api
-      const res = await http.post<AuthResponse>("/user/register", data);
+      const res = await await authService.register(data);
+
+      reset();
 
       if (res.accessToken) localStorage.setItem("accessToken", res.accessToken);
-      registerForm.reset();
+
       toast.add({
         type: "success",
         description: res.message,
       });
 
-      setTimeout(() => {
-        onSuccess();
-      }, 200);
+      onSuccess();
     } catch (error: unknown) {
       const errorMessage =
         error instanceof Error
@@ -89,7 +93,7 @@ export default function RegisterTab({ onSuccess }: RegisterTabProps) {
 
   return (
     <form
-      onSubmit={registerForm.handleSubmit(onRegisterSubmit)}
+      onSubmit={handleSubmit(onRegisterSubmit)}
       className="animate-in fade-in-50 space-y-3.5 duration-300"
     >
       <div className="space-y-1">
@@ -97,24 +101,24 @@ export default function RegisterTab({ onSuccess }: RegisterTabProps) {
           Họ và tên
         </Label>
         <Input
-          {...registerForm.register("fullName")}
+          {...register("fullName")}
           placeholder="Nhập họ và tên"
           className={`h-10 w-full rounded-xl border bg-white pl-3 text-sm placeholder:text-neutral-400 focus-visible:ring-1 ${
-            registerForm.formState.errors.fullName
+            errors.fullName
               ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500"
               : "border-neutral-200 focus-visible:border-(--primaryCus) focus-visible:ring-(--primaryCus)"
           }`}
         />
         <div
           className={`grid transition-all duration-300 ease-in-out ${
-            registerForm.formState.errors.fullName
+            errors.fullName
               ? "grid-rows-[1fr] opacity-100"
               : "grid-rows-[0fr] opacity-0"
           }`}
         >
           <div className="overflow-hidden">
             <p className="pt-1 text-[11px] font-medium text-red-500">
-              {registerForm.formState.errors.fullName?.message}
+              {errors.fullName?.message}
             </p>
           </div>
         </div>
@@ -125,11 +129,11 @@ export default function RegisterTab({ onSuccess }: RegisterTabProps) {
           Email / Số điện thoại
         </Label>
         <Input
-          {...registerForm.register("email")}
+          {...register("email")}
           onFocus={() => setFocusedInput("reEmail")}
           placeholder="Nhập email hoặc SĐT"
           className={`h-10 w-full rounded-xl border bg-white pl-3 text-sm placeholder:text-neutral-400 focus-visible:ring-1 ${
-            registerForm.formState.errors.email
+            errors.email
               ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500"
               : "border-neutral-200 focus-visible:border-(--primaryCus) focus-visible:ring-(--primaryCus)"
           }`}
@@ -158,11 +162,11 @@ export default function RegisterTab({ onSuccess }: RegisterTabProps) {
         <Label className="text-xs font-medium text-neutral-800">Mật khẩu</Label>
         <Input
           type="password"
-          {...registerForm.register("password")}
+          {...register("password")}
           onFocus={() => setFocusedInput("regPassword")}
           placeholder="Tạo mật khẩu"
           className={`h-10 w-full rounded-xl border bg-white pl-3 text-sm placeholder:text-neutral-400 focus-visible:ring-1 ${
-            registerForm.formState.errors.password
+            errors.password
               ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500"
               : "border-neutral-200 focus-visible:border-(--primaryCus) focus-visible:ring-(--primaryCus)"
           }`}
@@ -205,11 +209,11 @@ export default function RegisterTab({ onSuccess }: RegisterTabProps) {
         </Label>
         <Input
           type="password"
-          {...registerForm.register("confirmPassword")}
+          {...register("confirmPassword")}
           onFocus={() => setFocusedInput("regConfirm")}
           placeholder="Nhập lại mật khẩu"
           className={`h-10 w-full rounded-xl border bg-white pl-3 text-sm placeholder:text-neutral-400 focus-visible:ring-1 ${
-            registerForm.formState.errors.confirmPassword
+            errors.confirmPassword
               ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500"
               : "border-neutral-200 focus-visible:border-(--primaryCus) focus-visible:ring-(--primaryCus)"
           }`}

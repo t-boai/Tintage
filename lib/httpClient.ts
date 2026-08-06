@@ -181,17 +181,4 @@ export const http = {
 
   delete: <T>(path: string, options?: FetchOptions) =>
     httpRequest<T>(path, { ...options, method: "DELETE" }),
-
-  logout: async () => {
-    try {
-      await httpRequest("/auth/logout", { method: "POST" });
-    } catch (e) {
-      console.warn("Lỗi khi gọi Logout API:", e);
-    } finally {
-      if (typeof window !== "undefined") {
-        localStorage.removeItem("accessToken");
-        window.location.href = "/login";
-      }
-    }
-  },
 };

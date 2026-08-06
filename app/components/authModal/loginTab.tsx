@@ -18,15 +18,10 @@ import { toast } from "@/components/ui/toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-// lib
-import { http } from "@/lib/httpClient";
-
-// Interface
-import { AuthResponse } from "@/app/interfaces/user.interfaces";
-
 // Redux
 import { useAppDispatch } from "@/app/redux/hook";
 import { setUser } from "@/app/redux/slices/authSlice";
+import { authService } from "@/app/services/authService";
 
 interface LoginTabProps {
   onSuccess?: () => void;
@@ -37,7 +32,12 @@ export default function LoginTab({ onSuccess }: LoginTabProps) {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
-  const loginForm = useForm<LoginFormValues>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: { email: "", password: "" },
     mode: "onChange",
@@ -48,17 +48,15 @@ export default function LoginTab({ onSuccess }: LoginTabProps) {
       setIsLoading(true);
 
       // api
-      const res = await http.post<AuthResponse>("user/login", data);
+      const res = await authService.login(data);
 
-      if (res.accessToken) localStorage.setItem("accessToken", res.accessToken);
-      loginForm.reset();
+      reset();
+      dispatch(setUser(res.user));
 
       toast.add({
         type: "success",
         description: res.message || "Đăng nhập thành công <3",
       });
-
-      dispatch(setUser(res.user));
 
       if (onSuccess) onSuccess();
 
@@ -80,7 +78,7 @@ export default function LoginTab({ onSuccess }: LoginTabProps) {
 
   return (
     <form
-      onSubmit={loginForm.handleSubmit(onLoginSubmit)}
+      onSubmit={handleSubmit(onLoginSubmit)}
       className="animate-in fade-in-50 space-y-4 duration-300"
     >
       <div className="space-y-1">
@@ -88,10 +86,10 @@ export default function LoginTab({ onSuccess }: LoginTabProps) {
           Email / Số điện thoại
         </Label>
         <Input
-          {...loginForm.register("email")}
+          {...register("email")}
           placeholder="Nhập email hoặc SĐT"
           className={`h-11 rounded-xl border bg-white text-sm placeholder:text-neutral-400 focus-visible:ring-1 ${
-            loginForm.formState.errors.email
+            errors.email
               ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500"
               : "border-neutral-200 focus-visible:border-(--primaryCus) focus-visible:ring-(--primaryCus)"
           }`}
@@ -99,14 +97,14 @@ export default function LoginTab({ onSuccess }: LoginTabProps) {
         {/* Error Animation */}
         <div
           className={`grid transition-all duration-300 ease-in-out ${
-            loginForm.formState.errors.email
+            errors.email
               ? "grid-rows-[1fr] opacity-100"
               : "grid-rows-[0fr] opacity-0"
           }`}
         >
           <div className="overflow-hidden">
             <p className="pt-1 text-[11px] font-medium text-red-500">
-              {loginForm.formState.errors.email?.message}
+              {errors.email?.message}
             </p>
           </div>
         </div>
@@ -116,10 +114,10 @@ export default function LoginTab({ onSuccess }: LoginTabProps) {
         <Label className="text-xs font-medium text-neutral-800">Mật khẩu</Label>
         <Input
           type="password"
-          {...loginForm.register("password")}
+          {...register("password")}
           placeholder="••••••••"
           className={`h-11 rounded-xl border bg-white text-sm placeholder:text-neutral-400 focus-visible:ring-1 ${
-            loginForm.formState.errors.password
+            errors.password
               ? "border-red-500 focus-visible:border-red-500 focus-visible:ring-red-500"
               : "border-neutral-200 focus-visible:border-(--primaryCus) focus-visible:ring-(--primaryCus)"
           }`}
@@ -127,14 +125,14 @@ export default function LoginTab({ onSuccess }: LoginTabProps) {
         {/* Error Animation */}
         <div
           className={`grid transition-all duration-300 ease-in-out ${
-            loginForm.formState.errors.password
+            errors.password
               ? "grid-rows-[1fr] opacity-100"
               : "grid-rows-[0fr] opacity-0"
           }`}
         >
           <div className="overflow-hidden">
             <p className="pt-1 text-[11px] font-medium text-red-500">
-              {loginForm.formState.errors.password?.message}
+              {errors.password?.message}
             </p>
           </div>
         </div>
