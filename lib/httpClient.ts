@@ -1,137 +1,159 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "";
+const REQUEST_TIMEOUT = 15000;
 
-// Interface hỗ trợ tùy chỉnh options bổ sung cho fetch (cache, revalidate)
 interface FetchOptions extends RequestInit {
   headers?: Record<string, string>;
+  timeout?: number;
 }
 
-//  Hàm dịch token JWT để lấy thời gian hết hạn
-function parseJwt(token: string) {
-  try {
-    const base64Url = token.split(".")[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      window
-        .atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join(""),
-    );
-    return JSON.parse(jsonPayload);
-  } catch (error) {
-    return null;
-  }
-}
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: unknown) => void;
+  reject: (reason?: unknown) => void;
+}> = [];
 
-// Biến giữ trạng thái Promise để tránh trường hợp gọi Refresh Token API nhiều lần cùng lúc
-let refreshTokenPromise: Promise<string | null> | null = null;
+const processQueue = (error: unknown) => {
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error);
+    else prom.resolve();
+  });
+  failedQueue = [];
+};
 
-// Hàm lấy Token (Tự động gia hạn nếu sắp hết hạn)
-async function getValidAccessToken(): Promise<string | null> {
-  if (typeof window === "undefined") return null;
+const AUTH_BYPASS_ROUTES = new Set([
+  "/auth/refresh-token",
+  "/auth/logout",
+  "/user/login",
+  "/user/register",
+]);
 
-  const currentToken = localStorage.getItem("accessToken");
-  if (!currentToken) return null;
-
-  const decoded = parseJwt(currentToken);
-  if (!decoded || !decoded.exp) return currentToken;
-
-  const currentTime = Math.floor(Date.now() / 1000);
-  const timeToExpire = decoded.exp - currentTime;
-
-  // Nếu token còn sống hơn 2 phút , trả về để dùng
-  if (timeToExpire > 120) {
-    return currentToken;
-  }
-
-  // NẾU sắp hết hạn
-  // Nếu đã có 1 request khác đang đi xin token mới rồi, thì đợi ké kết quả của nó
-  if (refreshTokenPromise) {
-    return await refreshTokenPromise;
-  }
-
-  // quá trình gọi API xin Token mới
-  refreshTokenPromise = fetch(`${API_BASE_URL}/auth/refresh-token`, {
-    method: "POST",
-    credentials: "include",
-  })
-    .then(async (res) => {
-      if (!res.ok) throw new Error("Phiên bản hết hạn");
-      const data = await res.json();
-
-      if (data.accessToken) {
-        localStorage.setItem("accessToken", data.accessToken);
-        return data.accessToken;
-      }
-      return null;
-    })
-    .catch((error) => {
-      // Nếu Refresh Token cũng hết hạn hoặc lỗi -> đưa về trang login
-      console.warn("Refresh Token thất bại:", error);
-      localStorage.removeItem("accessToken");
-      window.location.href = "/"; // Force đăng nhập lại
-      return null;
-    })
-    .finally(() => {
-      refreshTokenPromise = null;
-    });
-
-  return await refreshTokenPromise;
-}
-
-// Hàm core xử lý request chung
 async function httpRequest<T>(
   endpoint: string,
   options: FetchOptions = {},
+  isRetry = false,
 ): Promise<T> {
-  // Lấy token
-  const token = await getValidAccessToken();
-
-  // chuẩn hóa path
   const normalizedPath = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
   const url = `${API_BASE_URL}${normalizedPath}`;
 
-  // Cấu hình headers mặc định
+  const isFormData = options.body instanceof FormData;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+
+  const customHeaders = { ...(options.headers || {}) };
+
+  if (token) {
+    customHeaders["Authorization"] = `Bearer ${token}`;
+  } else {
+    delete customHeaders["Authorization"];
+  }
+
   const defaultHeaders: Record<string, string> = {
-    "Content-Type": "application/json",
+    ...(isFormData ? {} : { "Content-Type": "application/json" }),
     Accept: "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-    ...options.headers,
+    ...customHeaders,
   };
+
+  // Tối ưu AbortController + Timeout
+  const controller = new AbortController();
+  const timeoutMs = options.timeout || REQUEST_TIMEOUT;
+  let isTimeout = false;
+
+  const timeoutId = setTimeout(() => {
+    isTimeout = true;
+    controller.abort();
+  }, timeoutMs);
+
+  // Nếu người dùng truyền signal từ bên ngoài, ghép luồng abort
+  if (options.signal) {
+    options.signal.addEventListener("abort", () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    });
+  }
 
   try {
     const response = await fetch(url, {
       ...options,
       headers: defaultHeaders,
+      credentials: "include",
+      signal: controller.signal,
     });
 
-    // Parse JSON từ response (nếu có body)
+    clearTimeout(timeoutId);
+
+    const isAuthBypassPath = AUTH_BYPASS_ROUTES.has(normalizedPath);
+
+    // 401 INTERCEPTOR
+    if (response.status === 401 && !isAuthBypassPath && !isRetry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => httpRequest<T>(endpoint, options, true));
+      }
+
+      isRefreshing = true;
+
+      try {
+        const refreshRes = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+          method: "GET",
+          credentials: "include",
+        });
+
+        if (!refreshRes.ok) throw new Error("Session expired");
+
+        const data = await refreshRes.json();
+        if (data.accessToken && typeof window !== "undefined") {
+          localStorage.setItem("accessToken", data.accessToken);
+        }
+
+        processQueue(null);
+        return httpRequest<T>(endpoint, options, true);
+      } catch (refreshError) {
+        processQueue(refreshError);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("accessToken");
+          if (window.location.pathname !== "/login") {
+            window.location.href = "/login";
+          }
+        }
+        throw refreshError;
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     const isJson = response.headers
       .get("content-type")
       ?.includes("application/json");
     const data = isJson ? await response.json() : null;
 
-    // Bắt lỗi HTTP status (4xx, 5xx)
     if (!response.ok) {
-      const errorMessage =
+      throw new Error(
         data?.message ||
-        `Lỗi yêu cầu (${response.status}): ${response.statusText}`;
-      throw new Error(errorMessage);
+          `Lỗi yêu cầu (${response.status}): ${response.statusText}`,
+      );
     }
 
     return data as T;
   } catch (error: unknown) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Lỗi không xác định";
-    console.error(
-      `[API Error] ${options.method || "GET"} ${url}:`,
-      errorMessage,
-    );
+    clearTimeout(timeoutId);
+
+    if (error instanceof Error && error.name === "AbortError") {
+      if (isTimeout) {
+        console.error(
+          `[API Timeout] ${options.method || "GET"} ${url} vượt quá ${timeoutMs}ms`,
+        );
+        throw new Error("Yêu cầu quá thời gian xử lý, vui lòng thử lại.");
+      }
+      // Trường hợp hủy do user/unmount component
+      throw new Error("Yêu cầu đã bị hủy.");
+    }
+
+    console.error(`[API Error] ${options.method || "GET"} ${url}:`, error);
     throw error;
   }
 }
 
-// các hàm helper ngắn gọn & có hỗ trợ Generic Type <T>
 export const http = {
   get: <T>(path: string, options?: FetchOptions) =>
     httpRequest<T>(path, { ...options, method: "GET" }),
@@ -140,23 +162,36 @@ export const http = {
     httpRequest<T>(path, {
       ...options,
       method: "POST",
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     }),
 
   put: <T>(path: string, data?: unknown, options?: FetchOptions) =>
     httpRequest<T>(path, {
       ...options,
       method: "PUT",
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     }),
 
   patch: <T>(path: string, data?: unknown, options?: FetchOptions) =>
     httpRequest<T>(path, {
       ...options,
       method: "PATCH",
-      body: JSON.stringify(data),
+      body: data instanceof FormData ? data : JSON.stringify(data),
     }),
 
   delete: <T>(path: string, options?: FetchOptions) =>
     httpRequest<T>(path, { ...options, method: "DELETE" }),
+
+  logout: async () => {
+    try {
+      await httpRequest("/auth/logout", { method: "POST" });
+    } catch (e) {
+      console.warn("Lỗi khi gọi Logout API:", e);
+    } finally {
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("accessToken");
+        window.location.href = "/login";
+      }
+    }
+  },
 };
