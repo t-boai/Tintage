@@ -16,12 +16,20 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
+import { toast } from "@/components/ui/toast";
 
 // icons
 import { LogOut, Settings, ShoppingBag, Store, User } from "lucide-react";
 
 // Redux
-import { useAppSelector } from "@/app/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
+import { logout } from "@/app/redux/slices/authSlice";
+
+// lib
+import { http } from "@/lib/httpClient";
+
+// services
+import { authService } from "@/app/services/authService";
 
 interface HeaderLoginProps {
   handleOpenAuth: (tab: "login" | "register") => void;
@@ -31,6 +39,24 @@ export default function HeaderLogin({ handleOpenAuth }: HeaderLoginProps) {
   const { user, isAuthenticated, isLoading } = useAppSelector(
     (state) => state.auth,
   );
+
+  const dispatch = useAppDispatch();
+
+  const handleLogout = async () => {
+    await authService.logout();
+    dispatch(logout());
+    toast.add({
+      type: "success",
+      description: "Đăng xuất thành công <3",
+    });
+
+    try {
+      //api
+      await http.post("/auth/logout", {});
+    } catch (error) {
+      console.log("Lỗi khi gọi API Logout: ", error);
+    }
+  };
 
   return (
     <div>
@@ -104,7 +130,10 @@ export default function HeaderLogin({ handleOpenAuth }: HeaderLoginProps) {
 
               <DropdownMenuSeparator />
 
-              <DropdownMenuItem className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600">
+              <DropdownMenuItem
+                className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-600"
+                onClick={handleLogout}
+              >
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Đăng xuất</span>
               </DropdownMenuItem>
