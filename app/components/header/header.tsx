@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import Logo from "@/public/logo-Tintage.png";
-import { useState } from "react";
+import React, { useState } from "react";
 
 // Components
 import HeaderMenu from "@/app/components/header/headerMenu";
@@ -16,13 +16,17 @@ export default function Header() {
   const [isAuthOpen, setIsAuthOpen] = useState(false);
   const [authTab, setAuthTab] = useState<"login" | "register">("login");
 
-  const handleOpenAuth = (tab: "login" | "register") => {
+  const handleOpenAuth = React.useCallback((tab: "login" | "register") => {
     setAuthTab(tab);
     setIsAuthOpen(true);
-  };
+  }, []);
+
+  const handleCloseAuth = React.useCallback(() => {
+    setIsAuthOpen(false);
+  }, []);
 
   return (
-    <header className="box-shadow t-0 l-0 sticky top-0 left-0 z-50 w-full transform-gpu bg-white">
+    <header className="box-shadow sticky top-0 left-0 z-50 w-full transform-gpu bg-white">
       <div className="container mx-auto my-5 flex items-center justify-between">
         <Link href="/">
           <Image
