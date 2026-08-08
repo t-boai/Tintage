@@ -1,4 +1,4 @@
-import HomeS1 from "@/app/(pages)/(home)/home-s1";
+import HomeS1 from "@/app/(pages)/(home)/(HomeS1)/home-s1";
 import HomeS2 from "@/app/(pages)/(home)/home-s2";
 import HomeS3 from "@/app/(pages)/(home)/home-s3";
 import HomeS4 from "@/app/(pages)/(home)/home-s4";
@@ -7,7 +7,7 @@ import HomeS6 from "@/app/(pages)/(home)/home-s6";
 
 export default function Home() {
   return (
-    <main className="mt-[16vh]">
+    <main className="mt-[5vh]">
       <HomeS1 />
       <HomeS2 />
       <HomeS3 />
