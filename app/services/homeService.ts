@@ -1,4 +1,7 @@
 import { CategoriesItem, SlideItem } from "@/app/interfaces/home.interfaces";
+import { ProductItem } from "@/app/interfaces/products.interfaces";
+
+// lib
 import { http } from "@/lib/httpClient";
 
 interface ApiRes<T> {
@@ -23,5 +26,16 @@ export const homeService = {
     });
 
     return res?.data || [];
+  },
+
+  getProductsFeatured: async (): Promise<ProductItem[]> => {
+    const res = await http.get<ApiRes<ProductItem[]>>(
+      "/home/products-featured",
+      {
+        next: { revalidate: 1800 },
+      },
+    );
+
+    return res.data || [];
   },
 };

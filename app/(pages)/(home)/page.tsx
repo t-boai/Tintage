@@ -1,6 +1,6 @@
 import HomeS1 from "@/app/(pages)/(home)/(HomeS1)/home-s1";
 import HomeS2 from "@/app/(pages)/(home)/home-s2";
-import HomeS3 from "@/app/(pages)/(home)/home-s3";
+import HomeS3 from "@/app/(pages)/(home)/(HomeS3)/home-s3";
 import HomeS4 from "@/app/(pages)/(home)/home-s4";
 import HomeS5 from "@/app/(pages)/(home)/home-s5";
 import HomeS6 from "@/app/(pages)/(home)/home-s6";
