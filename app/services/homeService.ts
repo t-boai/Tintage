@@ -1,4 +1,4 @@
-import { SlideItem } from "@/app/interfaces/home.interfaces";
+import { CategoriesItem, SlideItem } from "@/app/interfaces/home.interfaces";
 import { http } from "@/lib/httpClient";
 
 interface ApiRes<T> {
@@ -11,6 +11,14 @@ export const homeService = {
   getSlides: async (): Promise<SlideItem[]> => {
     const res = await http.get<ApiRes<SlideItem[]>>("/home/slide", {
       // Cấu hình Caching cho Next.js Server Component (Revalidate sau 1 tiếng)
+      next: { revalidate: 3600 },
+    });
+
+    return res?.data || [];
+  },
+
+  getCategories: async (): Promise<CategoriesItem[]> => {
+    const res = await http.get<ApiRes<CategoriesItem[]>>("/home/categories", {
       next: { revalidate: 3600 },
     });
 

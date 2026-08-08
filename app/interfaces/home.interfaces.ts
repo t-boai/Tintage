@@ -9,3 +9,10 @@ export interface SlideItem {
   image: string;
   alt: string;
 }
+
+export interface CategoriesItem {
+  id: number | string;
+  name: string;
+  image: string;
+  href: string;
+}

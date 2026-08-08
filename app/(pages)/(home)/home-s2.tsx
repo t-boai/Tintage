@@ -1,59 +1,26 @@
-"use client";
-
 import Link from "next/link";
 import Image from "next/image";
 
-interface Category {
-  id: string;
-  name: string;
-  image: string;
-  href: string;
-}
+// interface
+import { CategoriesItem } from "@/app/interfaces/home.interfaces";
 
-const CATEGORIES: Category[] = [
-  {
-    id: "1",
-    name: "Quần áo",
-    image: "/cate-clothes.jpg",
-    href: "/categories/quan-ao",
-  },
-  {
-    id: "2",
-    name: "Giày dép",
-    image: "/cate-shoes.jpg",
-    href: "/categories/giay-dep",
-  },
-  {
-    id: "3",
-    name: "Túi xách",
-    image: "/cate-hand-bag.jpg",
-    href: "/categories/tui-xach",
-  },
-  {
-    id: "4",
-    name: "Phụ kiện",
-    image: "/cate-asscessory.jpg",
-    href: "/categories/phu-kien",
-  },
-  {
-    id: "5",
-    name: "Trang sức",
-    image: "/cate-jewelry.jpg",
-    href: "/categories/trang-suc",
-  },
-  {
-    id: "6",
-    name: "Đồ Hiệu",
-    image: "/cate-designer items.jpg",
-    href: "/categories/do-hieu",
-  },
-];
+// service
+import { homeService } from "@/app/services/homeService";
 
-export default function HomeS2() {
+export default async function HomeS2() {
+  let categories: CategoriesItem[] = [];
+
+  try {
+    const data = await homeService.getCategories();
+
+    if (Array.isArray(data) && data.length > 0) categories = data;
+  } catch (error) {
+    console.error("Home Categories-Lỗi fetch Api: ", error);
+  }
   return (
     <section className="w-full py-8">
       <div className="mb-6 flex items-center justify-between">
-        <h2 className="text-[2vw] font-bold text-neutral-900">
+        <h2 className="text-xl font-bold text-neutral-900 sm:text-2xl">
           Danh mục nổi bật
         </h2>
         <Link
@@ -65,7 +32,7 @@ export default function HomeS2() {
       </div>
 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 md:grid-cols-6">
-        {CATEGORIES.map((cat) => (
+        {categories.map((cat) => (
           <Link
             key={cat.id}
             href={cat.href}
