@@ -1,21 +1,27 @@
+import * as React from "react";
 import Link from "next/link";
+
+// Components
 import ProductsFeatured from "@/app/(pages)/(home)/(HomeS3)/products-featured";
+import ProductCardSkeleton from "@/app/components/skeleton/ProductCardSkeleton";
 
-// interface
-import { ProductItem } from "@/app/interfaces/products.interfaces";
+// services
 import { homeService } from "@/app/services/homeService";
+import { ProductItem } from "@/app/interfaces/products.interfaces";
 
-export default async function HomeS3() {
+async function FeaturedList() {
   let products: ProductItem[] = [];
-
   try {
     const data = await homeService.getProductsFeatured();
-    console.log(data);
-    if (Array.isArray(data) && data.length > 0) products = data;
+    if (Array.isArray(data)) products = data;
   } catch (error) {
-    console.error("Home Product Featured-Lỗi fetch Api: ", error);
+    console.error("Home Product Featured - Lỗi fetch API:", error);
   }
 
+  return <ProductsFeatured products={products} />;
+}
+
+export default function HomeS3() {
   return (
     <section className="w-full py-8">
       <div className="mb-6 flex items-center justify-between">
@@ -30,7 +36,15 @@ export default async function HomeS3() {
         </Link>
       </div>
 
-      <ProductsFeatured products={products} />
+      <React.Suspense
+        fallback={
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-6">
+            <ProductCardSkeleton count={6} />
+          </div>
+        }
+      >
+        <FeaturedList />
+      </React.Suspense>
     </section>
   );
 }

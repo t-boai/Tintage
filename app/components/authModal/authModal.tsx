@@ -10,35 +10,31 @@ import { Button } from "@/components/ui/button";
 
 // Components
 import { FacebookIcon, GoogleIcon } from "@/app/config/iconsSvg.config";
-
-// Interfaces
 import LoginTab from "@/app/components/authModal/loginTab";
 import RegisterTab from "@/app/components/authModal/registerTab";
-import { AuthModalProps } from "@/app/interfaces/authModal.interfaces";
 
-export default function AuthModal({
-  isOpen,
-  onClose,
-  defaultTab = "login",
-}: AuthModalProps) {
-  const [activeTab, setActiveTab] = React.useState<"login" | "register">(
-    defaultTab,
+// redux
+import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
+import { closeAuthModal, openAuthModal } from "@/app/redux/slices/authSlice";
+
+export default function AuthModal() {
+  const dispatch = useAppDispatch();
+  const { isAuthModalOpen, authModalTab } = useAppSelector(
+    (state) => state.auth,
   );
-  const [prevIsOpen, setPrevIsOpen] = React.useState(isOpen);
 
-  if (isOpen !== prevIsOpen) {
-    setPrevIsOpen(isOpen);
-    if (isOpen) {
-      setActiveTab(defaultTab);
-    }
-  }
+  const activeTab = authModalTab || "login";
+
+  const handleClose = React.useCallback(() => {
+    dispatch(closeAuthModal());
+  }, [dispatch]);
 
   const handleTabChange = (tab: "login" | "register") => {
-    setActiveTab(tab);
+    dispatch(openAuthModal(tab));
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isAuthModalOpen} onOpenChange={handleClose}>
       <DialogContent className="overflow-hidden border-none bg-transparent p-0 shadow-2xl sm:rounded-[24px]">
         <DialogTitle className="sr-only">
           Đăng nhập hoặc Đăng ký Tintage
@@ -48,6 +44,7 @@ export default function AuthModal({
             src="/cate-clothes.jpg"
             alt="Tintage Background"
             fill
+            quality={75}
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
             className="-z-20 object-cover"
           />
@@ -98,7 +95,7 @@ export default function AuthModal({
             <div className="mt-6">
               {activeTab === "login" ? (
                 /* Login Tab */
-                <LoginTab onSuccess={onClose} />
+                <LoginTab onSuccess={handleClose} />
               ) : (
                 /* Register Tab */
                 <RegisterTab onSuccess={() => handleTabChange("login")} />

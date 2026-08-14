@@ -23,28 +23,26 @@ import { LogOut, Settings, ShoppingBag, Store, User } from "lucide-react";
 
 // Redux
 import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
-import { logout } from "@/app/redux/slices/authSlice";
-
-// lib
-import { http } from "@/lib/httpClient";
+import { logout, openAuthModal } from "@/app/redux/slices/authSlice";
 
 // services
 import { authService } from "@/app/services/authService";
+import { clearHeartList } from "@/app/redux/slices/heartListSlice";
 
-interface HeaderLoginProps {
-  handleOpenAuth: (tab: "login" | "register") => void;
-}
-
-export default function HeaderLogin({ handleOpenAuth }: HeaderLoginProps) {
+export default function HeaderLogin() {
   const { user, isAuthenticated, isLoading } = useAppSelector(
     (state) => state.auth,
   );
 
   const dispatch = useAppDispatch();
 
+  const handleTabChange = (tab: "login" | "register") => {
+    dispatch(openAuthModal(tab));
+  };
+
   const handleLogout = async () => {
-    await authService.logout();
     dispatch(logout());
+    dispatch(clearHeartList());
     toast.add({
       type: "success",
       description: "Đăng xuất thành công <3",
@@ -52,7 +50,7 @@ export default function HeaderLogin({ handleOpenAuth }: HeaderLoginProps) {
 
     try {
       //api
-      await http.post("/auth/logout", {});
+      await authService.logout();
     } catch (error) {
       console.log("Lỗi khi gọi API Logout: ", error);
     }
@@ -150,7 +148,7 @@ export default function HeaderLogin({ handleOpenAuth }: HeaderLoginProps) {
               <Button
                 className="transitionCus cursor-pointer border bg-(--primaryCus) text-white hover:border-(--primaryCus) hover:text-(--primaryCus)"
                 variant="outline"
-                onClick={() => handleOpenAuth("login")}
+                onClick={() => handleTabChange("login")}
               >
                 Đăng nhập
               </Button>

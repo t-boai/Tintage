@@ -7,12 +7,16 @@ interface AuthState {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAuthModalOpen: boolean;
+  authModalTab: "login" | "register";
 }
 
 const initialState: AuthState = {
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  isAuthModalOpen: false,
+  authModalTab: "login",
 };
 
 const authSlice = createSlice({
@@ -32,8 +36,16 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.isLoading = false;
     },
+    openAuthModal: (state, action: PayloadAction<"login" | "register">) => {
+      state.isAuthModalOpen = true;
+      if (action.payload) state.authModalTab = action.payload;
+    },
+    closeAuthModal: (state) => {
+      state.isAuthModalOpen = false;
+    },
   },
 });
 
-export const { setUser, setLoading, logout } = authSlice.actions;
+export const { setUser, setLoading, logout, openAuthModal, closeAuthModal } =
+  authSlice.actions;
 export default authSlice.reducer;

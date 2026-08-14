@@ -7,7 +7,8 @@ import Footer from "@/app/components/footer/footer";
 // Shad
 import { Toaster } from "@/components/ui/toast";
 import { ReduxProvider } from "@/app/redux/provider";
-import AuthInitializer from "@/app/redux/AuthInitializer";
+import AppInitializer from "@/app/redux/AppInitializer";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -28,12 +29,14 @@ export default function RootLayout({
     <html lang="en" className={`${inter.className} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <ReduxProvider>
-          <AuthInitializer>
-            <Header />
-            <main className="container mx-auto">{children}</main>
-            <Toaster />
-            <Footer />
-          </AuthInitializer>
+          <AppInitializer>
+            <TooltipProvider>
+              <Header />
+              <main className="container mx-auto">{children}</main>
+              <Toaster />
+              <Footer />
+            </TooltipProvider>
+          </AppInitializer>
         </ReduxProvider>
       </body>
     </html>
