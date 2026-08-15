@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, MapPin, ShoppingBag } from "lucide-react";
+import { BadgeCheck, Heart, MapPin, ShoppingBag, Star } from "lucide-react";
 
 // Interfaces & Helpers
 import { ProductItem } from "@/app/interfaces/products.interfaces";
@@ -130,36 +130,85 @@ export default function ProductCard({ product }: { product: ProductItem }) {
       <div className="flex flex-1 flex-col justify-between p-3 sm:p-4">
         <div>
           <div className="flex items-center justify-between text-xs text-neutral-500">
-            <span className="font-bold tracking-wide text-neutral-900 uppercase">
+            <span
+              className="max-w-[60%] truncate font-bold tracking-wide text-neutral-900 uppercase"
+              title={product.brand}
+            >
               {product.brand}
             </span>
-            {product.condition && <span>{product.condition}</span>}
+            {product.condition && (
+              <span className="shrink-0">{product.condition}</span>
+            )}
           </div>
-          <h3 className="mt-1.5 line-clamp-2 text-sm leading-snug font-medium text-neutral-800 group-hover:text-(--primaryCus)">
+
+          <h3
+            className="mt-1.5 line-clamp-2 text-sm leading-snug font-medium text-neutral-800 group-hover:text-(--primaryCus)"
+            title={product.name}
+          >
             {product.name}
           </h3>
         </div>
 
-        <div className="mt-3 flex flex-col gap-1.5">
-          <div className="flex items-center justify-between">
-            <div className="flex flex-wrap items-baseline gap-1.5">
-              <span className="text-sm font-extrabold text-(--primaryCus) sm:text-base">
-                {formatPrice(product.price)}
+        <div className="mt-3 flex flex-col gap-2">
+          <div className="flex flex-wrap items-baseline gap-1.5">
+            <span className="text-sm font-extrabold text-(--primaryCus) sm:text-base">
+              {formatPrice(product.price)}
+            </span>
+            {product.originalPrice && product.originalPrice > product.price && (
+              <span className="text-[11px] text-neutral-400 line-through">
+                {formatPrice(product.originalPrice)}
               </span>
-              {product.originalPrice &&
-                product.originalPrice > product.price && (
-                  <span className="text-[11px] text-neutral-400 line-through">
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                )}
+            )}
+          </div>
+
+          <div className="flex flex-col gap-1.5 border-t border-neutral-100 pt-2.5">
+            {product.seller && (
+              <div className="flex items-center gap-1.5">
+                <div className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-neutral-200 shadow-inner">
+                  <Image
+                    src={product.seller.avatar || "/placeholder-image.png"}
+                    alt={product.seller.fullName}
+                    fill
+                    sizes="16px"
+                    className="object-cover"
+                  />
+                </div>
+
+                <span
+                  className="truncate text-xs font-medium text-neutral-700"
+                  title={product.seller.fullName}
+                >
+                  {product.seller.fullName}
+                </span>
+
+                <div className="flex shrink-0 items-center gap-1">
+                  {product.seller.isVerifiedSeller && (
+                    <BadgeCheck className="h-3.5 w-3.5 text-blue-500" />
+                  )}
+
+                  {product.seller.sellerRole !== "individual" && (
+                    <Badge className="h-4 border-none bg-(--primaryCus) px-1 py-0 text-[9px] font-bold text-white">
+                      {product.seller.sellerRole === "mall" ? "MALL" : "PRO"}
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between text-[11px] text-neutral-400">
+              <div className="flex items-center gap-0.5">
+                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                <span>{product.seller?.sellerRating || "5.0"}</span>
+              </div>
+
+              {product.location && (
+                <div className="flex max-w-[50%] items-center gap-1">
+                  <MapPin className="h-3 w-3 shrink-0" />
+                  <span className="truncate">{product.location}</span>
+                </div>
+              )}
             </div>
           </div>
-          {product.location && (
-            <div className="mt-1 flex items-center gap-1 text-[11px] text-neutral-400">
-              <MapPin className="h-3 w-3 shrink-0" />
-              <span className="truncate">{product.location}</span>
-            </div>
-          )}
         </div>
       </div>
     </Link>
