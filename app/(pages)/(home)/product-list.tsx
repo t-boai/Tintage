@@ -1,19 +1,19 @@
-"use client";
-
-import { ProductItem } from "@/app/interfaces/products.interfaces";
 import ProductCard from "@/app/components/productCard/productCard";
+import { ProductItem } from "@/app/interfaces/products.interfaces";
 
-interface ProductsFeaturedProps {
+interface ProductListProps {
   products: ProductItem[];
+  emptyMessage?: string;
 }
 
-export default function ProductsFeatured({ products }: ProductsFeaturedProps) {
+export default function ProductList({
+  products,
+  emptyMessage = "Chưa có sản phẩm nào.",
+}: ProductListProps) {
   if (!products || products.length === 0) {
     return (
       <div className="flex h-40 w-full items-center justify-center rounded-2xl border border-neutral-100 bg-neutral-50">
-        <p className="text-sm text-neutral-400">
-          Chưa có sản phẩm nổi bật nào.
-        </p>
+        <p className="text-sm text-neutral-400">{emptyMessage}</p>
       </div>
     );
   }

@@ -31,11 +31,16 @@ export const homeService = {
   getProductsFeatured: async (): Promise<ProductItem[]> => {
     const res = await http.get<ApiRes<ProductItem[]>>(
       "/home/products-featured",
-      {
-        next: { revalidate: 1800 },
-      },
+      { next: { revalidate: 1800 } },
     );
 
     return res.data || [];
+  },
+
+  getDailyDiscover: async (): Promise<ProductItem[]> => {
+    const res = await http.get<ApiRes<ProductItem[]>>("/home/daily-discover", {
+      next: { revalidate: 1800 },
+    });
+    return res?.data || [];
   },
 };

@@ -2,24 +2,9 @@ import * as React from "react";
 import Link from "next/link";
 
 // Components
-import ProductsFeatured from "@/app/(pages)/(home)/(HomeS3)/products-featured";
 import ProductCardSkeleton from "@/app/components/skeleton/ProductCardSkeleton";
 
-// services
-import { homeService } from "@/app/services/homeService";
-import { ProductItem } from "@/app/interfaces/products.interfaces";
-
-async function FeaturedList() {
-  let products: ProductItem[] = [];
-  try {
-    const data = await homeService.getProductsFeatured();
-    if (Array.isArray(data)) products = data;
-  } catch (error) {
-    console.error("Home Product Featured - Lỗi fetch API:", error);
-  }
-
-  return <ProductsFeatured products={products} />;
-}
+import ProductSection from "@/app/(pages)/(home)/product-section";
 
 export default function HomeS3() {
   return (
@@ -43,7 +28,10 @@ export default function HomeS3() {
           </div>
         }
       >
-        <FeaturedList />
+        <ProductSection
+          type="featured"
+          emptyMessage="Chưa có sản phẩm nổi bật nào."
+        />
       </React.Suspense>
     </section>
   );
