@@ -17,7 +17,6 @@ export interface ProductItem {
   isNew?: boolean;
   image: string;
   slug: string;
-  likesCount: number;
   salesCount: number;
   originalPrice: number;
   location: string;

@@ -113,6 +113,7 @@ export default function ProductCard({ product }: { product: ProductItem }) {
               className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 p-0 text-neutral-600 shadow-sm backdrop-blur-md transition-colors hover:bg-white active:scale-90"
             >
               <Heart
+                suppressHydrationWarning
                 className={`h-4 w-4 transition-colors ${
                   isLiked
                     ? "fill-(--primaryCus) text-(--primaryCus)"
