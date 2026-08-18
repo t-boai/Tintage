@@ -147,7 +147,7 @@ export default function HomeCarousel({ slides }: HomeCarouselProps) {
             aria-label={`Go to slide ${index + 1}`}
             className={`h-2 rounded-full transition-all duration-300 ${
               index === current
-                ? "w-8 bg-[#FF2E55]"
+                ? "w-8 bg-(--primaryCus)"
                 : "w-2 bg-white/40 hover:bg-white/80"
             }`}
           />
