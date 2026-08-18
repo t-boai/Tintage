@@ -82,7 +82,7 @@ export default function ProductCard({ product }: { product: ProductItem }) {
             </Badge>
           )}
           {product.isNew && !isOutOfStock && (
-            <Badge className="border-none bg-white/90 text-[10px] font-bold text-neutral-900 uppercase shadow-sm backdrop-blur-md">
+            <Badge className="border border-white/20 bg-neutral-950/80 px-2 py-0.5 text-[10px] font-bold tracking-widest text-white shadow-md backdrop-blur-md">
               MỚI
             </Badge>
           )}
