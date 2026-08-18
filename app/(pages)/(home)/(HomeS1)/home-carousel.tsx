@@ -99,7 +99,7 @@ export default function HomeCarousel({ slides }: HomeCarouselProps) {
               </span>
 
               <div className="my-auto max-w-xl pt-2">
-                <Badge className="border-none bg-[#FF2E55] px-3.5 py-1 text-[11px] font-bold tracking-wider text-white uppercase hover:bg-[#FF2E55]">
+                <Badge className="border-none bg-(--primaryCus) px-3.5 py-1 text-[11px] font-bold tracking-wider text-white uppercase hover:bg-(--primaryCus)">
                   {slide.badge}
                 </Badge>
 

@@ -1,4 +1,6 @@
-import HomeCarousel from "@/app/(pages)/(home)/(HomeS1)/home-carousel";
+import * as React from "react";
+
+// icons
 import { Leaf, ShieldCheck, Van } from "lucide-react";
 
 // interface
@@ -7,18 +9,29 @@ import { SlideItem } from "@/app/interfaces/home.interfaces";
 // service
 import { homeService } from "@/app/services/homeService";
 
-export default async function HomeS1() {
+// components
+import HomeCarousel from "@/app/(pages)/(home)/(HomeS1)/home-carousel";
+import HomeCarouselSkeleton from "@/app/components/skeleton/HomeCarouselSkeleton";
+
+async function BannerData() {
   let slides: SlideItem[] = [];
+
   try {
-    // api
-    slides = await homeService.getSlides();
+    const data = await homeService.getSlides();
+    if (Array.isArray(data) && data.length > 0) slides = data;
   } catch (error) {
-    console.error("HomeS1-Lỗi fetch Api: ", error);
+    console.error("Home Banner-Lỗi fetch Api: ", error);
   }
 
+  return <HomeCarousel slides={slides && slides.length > 0 ? slides : []} />;
+}
+
+export default async function HomeS1() {
   return (
     <div className="my-10">
-      <HomeCarousel slides={slides && slides.length > 0 ? slides : []} />
+      <React.Suspense fallback={<HomeCarouselSkeleton />}>
+        <BannerData />
+      </React.Suspense>
 
       <div className="center mt-[8vh] gap-10">
         <div className="center gap-3">
