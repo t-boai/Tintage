@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toast";
 import { ReduxProvider } from "@/app/redux/provider";
 import AppInitializer from "@/app/redux/AppInitializer";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import SmoothScroll from "@/app/components/smoothScroll/SmoothScroll";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -31,10 +32,12 @@ export default function RootLayout({
         <ReduxProvider>
           <AppInitializer>
             <TooltipProvider>
-              <Header />
-              <main className="container mx-auto">{children}</main>
-              <Toaster />
-              <Footer />
+              <SmoothScroll>
+                <Header />
+                <main className="container mx-auto">{children}</main>
+                <Toaster />
+                <Footer />
+              </SmoothScroll>
             </TooltipProvider>
           </AppInitializer>
         </ReduxProvider>
