@@ -171,7 +171,7 @@ export default function HeaderHeartListHover({ count }: Props) {
         align="end"
         className="data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 w-80 overflow-hidden p-0 shadow-2xl duration-200 sm:w-96"
       >
-        {isAuthenticated ? (
+        {!isAuthenticated ? (
           <div className="flex flex-col items-center justify-center bg-white px-6 py-10 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-50">
               <Heart className="h-7 w-7 text-(--primaryCus)" />
@@ -263,7 +263,7 @@ export default function HeaderHeartListHover({ count }: Props) {
                                 variant="ghost"
                                 size="icon"
                                 onClick={(e) => handleRemoveHeart(e, id)}
-                                className="h-7 w-7 text-neutral-400 transition-transform hover:scale-105 hover:bg-red-50 hover:text-red-500 active:scale-95"
+                                className="h-7 w-7 text-neutral-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-500"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
@@ -274,7 +274,7 @@ export default function HeaderHeartListHover({ count }: Props) {
                                   variant="outline"
                                   size="icon"
                                   onClick={handleAddToCart}
-                                  className="h-7 w-7 border-(--primaryCus) text-(--primaryCus) transition-transform hover:scale-105 hover:bg-(--primaryCus) hover:text-white active:scale-95"
+                                  className="h-7 w-7 border-(--primaryCus) text-(--primaryCus) transition-colors duration-200 hover:bg-(--primaryCus) hover:text-white"
                                 >
                                   <ShoppingBag className="h-3.5 w-3.5" />
                                 </Button>
