@@ -75,7 +75,10 @@ export default function HeaderLogin() {
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger className="outline-none">
               <div className="flex cursor-pointer items-center gap-2 rounded-full px-2 py-1 transition-colors hover:bg-neutral-100">
-                <span className="hidden max-w-30 truncate text-sm font-medium md:block">
+                <span
+                  className="hidden max-w-30 truncate text-sm font-medium md:block"
+                  title={user.fullName}
+                >
                   {user.fullName}
                 </span>
                 <div className="relative h-9 w-9 overflow-hidden rounded-full border border-gray-200 bg-neutral-100">
