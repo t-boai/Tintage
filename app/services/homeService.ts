@@ -1,4 +1,8 @@
-import { CategoriesItem, SlideItem } from "@/app/interfaces/home.interfaces";
+import {
+  BlogsItem,
+  CategoriesItem,
+  SlideItem,
+} from "@/app/interfaces/home.interfaces";
 import { ProductItem } from "@/app/interfaces/products.interfaces";
 
 // lib
@@ -39,6 +43,13 @@ export const homeService = {
 
   getDailyDiscover: async (): Promise<ProductItem[]> => {
     const res = await http.get<ApiRes<ProductItem[]>>("/home/daily-discover", {
+      next: { revalidate: 1800 },
+    });
+    return res?.data || [];
+  },
+
+  getBlogs: async (): Promise<BlogsItem[]> => {
+    const res = await http.get<ApiRes<BlogsItem[]>>("/home/blogs", {
       next: { revalidate: 1800 },
     });
     return res?.data || [];

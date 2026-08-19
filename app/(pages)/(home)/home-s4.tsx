@@ -13,7 +13,6 @@ import ProductSection from "@/app/(pages)/(home)/product-section";
 export default function HomeS4() {
   return (
     <section className="w-full py-8">
-      {/* Title */}
       <div className="mb-6 flex items-center gap-2">
         <Sparkles className="h-6 w-6 text-(--primaryCus)" />
         <h2 className="text-xl font-bold text-neutral-900 sm:text-2xl">

@@ -16,3 +16,14 @@ export interface CategoriesItem {
   image: string;
   href: string;
 }
+
+export interface BlogsItem {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  date: string;
+  readTime: string;
+  image: string;
+  slug: string;
+}
