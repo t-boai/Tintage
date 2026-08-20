@@ -17,7 +17,7 @@ import { http } from "@/lib/httpClient";
 import { User } from "@/app/interfaces/user.interfaces";
 
 // service
-import { productService } from "@/app/services/productService";
+import { heartService } from "@/app/services/heartService";
 
 export default function AppInitializer({
   children,
@@ -42,7 +42,7 @@ export default function AppInitializer({
         // api
         const [profileRes, heartListRes] = await Promise.allSettled([
           http.get<{ data: User }>("/user/profile"),
-          productService.getMyHeart(),
+          heartService.getMyHeart(),
         ]);
 
         // xử lí profile (auth)
@@ -73,7 +73,7 @@ export default function AppInitializer({
   useEffect(() => {
     // Nếu đã đăng nhập thành công nhưng heartlist chưa được load
     if (isAuthenticated && !isInitialized) {
-      productService
+      heartService
         .getMyHeart()
         .then((likedIds) => dispatch(setHeartList(likedIds)))
         .catch((err) => console.error("Lỗi fetch tim sau đăng nhập:", err));

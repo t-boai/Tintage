@@ -2,7 +2,7 @@
 import * as React from "react";
 import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
 import { toggleItem } from "@/app/redux/slices/heartListSlice";
-import { productService } from "@/app/services/productService";
+import { heartService } from "@/app/services/heartService";
 import { toast } from "@/components/ui/toast";
 
 export default function useProductHeart(productId: string) {
@@ -38,7 +38,7 @@ export default function useProductHeart(productId: string) {
 
     // 2. API Background
     try {
-      await productService.toggleHeart(productId, nextIsLiked);
+      await heartService.toggleHeart(productId, nextIsLiked);
     } catch (error) {
       console.error("Lỗi cập nhật lượt thích: ", error);
       dispatch(toggleItem({ id: productId, isLiked: !nextIsLiked }));

@@ -21,7 +21,7 @@ import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
 import { toggleItem } from "@/app/redux/slices/heartListSlice";
 
 // service
-import { productService } from "@/app/services/productService";
+import { heartService } from "@/app/services/heartService";
 
 // interface
 import { ProductItem } from "@/app/interfaces/products.interfaces";
@@ -64,7 +64,7 @@ export default function HeaderHeartListHover({ count }: Props) {
       if (targetPage === 1) setIsInitialLoading(true);
       else setIsFetchingMore(true);
 
-      const data = (await productService.getMyWishlist(
+      const data = (await heartService.getMyWishlist(
         targetPage,
         10,
       )) as unknown as heartlistItem[];
@@ -132,7 +132,7 @@ export default function HeaderHeartListHover({ count }: Props) {
     });
 
     try {
-      await productService.toggleHeart(productId, false);
+      await heartService.toggleHeart(productId, false);
     } catch (error) {
       console.error("Lỗi đồng bộ máy chủ <3", error);
       toast.add({ type: "error", description: "Lỗi đồng bộ máy chủ <3" });
