@@ -3,7 +3,14 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { BadgeCheck, Heart, MapPin, ShoppingBag, Star } from "lucide-react";
+import {
+  BadgeCheck,
+  Heart,
+  Loader2,
+  MapPin,
+  ShoppingBag,
+  Star,
+} from "lucide-react";
 
 // Interfaces & Helpers
 import { ProductItem } from "@/app/interfaces/products.interfaces";
@@ -14,9 +21,10 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
 
 // Redux & Hooks
-import { useAppDispatch } from "@/app/redux/hook";
+import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
 import { openAuthModal } from "@/app/redux/slices/authSlice";
 import useProductHeart from "@/app/hooks/useProductHeart";
+import useCart from "@/app/hooks/useCart";
 import {
   Tooltip,
   TooltipContent,
@@ -26,7 +34,12 @@ import {
 export default function ProductCard({ product }: { product: ProductItem }) {
   const dispatch = useAppDispatch();
   const targetId = product.id || "";
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { isLiked, handleToggle } = useProductHeart(targetId);
+  const { handleAddToCart, isAdding } = useCart();
+  const isInCart = useAppSelector(
+    (state) => isAuthenticated && !!state.cart.cartItemMap[targetId],
+  );
 
   const handleClickHeart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -43,9 +56,21 @@ export default function ProductCard({ product }: { product: ProductItem }) {
   const handleClickCart = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    toast.add({
-      type: "info",
-      description: "Tính năng thêm giỏ hàng đang phát triển!",
+
+    if (isInCart) {
+      toast.add({
+        type: "info",
+        description: "Sản phẩm này đã nằm trong giỏ hàng của bạn <3",
+      });
+      return;
+    }
+
+    handleAddToCart({ id: targetId, price: product.price }, () => {
+      toast.add({
+        type: "info",
+        description: "Vui lòng đăng nhập để thêm vào giỏ hàng <3",
+      });
+      dispatch(openAuthModal("login"));
     });
   };
 
@@ -94,13 +119,28 @@ export default function ProductCard({ product }: { product: ProductItem }) {
               <TooltipTrigger
                 type="button"
                 onClick={handleClickCart}
-                aria-label="Thêm vào giỏ hàng"
-                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-white/90 p-0 text-neutral-600 shadow-sm backdrop-blur-md transition-colors hover:bg-white hover:text-neutral-900 active:scale-90"
+                disabled={isAdding}
+                aria-label={
+                  isInCart ? "Đã có trong giỏ hàng" : "Thêm vào giỏ hàng"
+                }
+                className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-full p-0 shadow-sm backdrop-blur-md transition-all duration-200 active:scale-90 ${
+                  isInCart
+                    ? "bg-(--primaryCus) text-white hover:bg-(--primaryCus)/90"
+                    : "bg-white/90 text-neutral-600 hover:bg-white hover:text-neutral-900"
+                } ${isAdding ? "cursor-wait opacity-70" : ""}`}
               >
-                <ShoppingBag className="h-4 w-4" />
+                {isAdding ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-current" />
+                ) : (
+                  <ShoppingBag
+                    className={`h-4 w-4 transition-colors ${
+                      isInCart ? "fill-white/30 text-white" : ""
+                    }`}
+                  />
+                )}
               </TooltipTrigger>
               <TooltipContent>
-                <p>Thêm vào giỏ hàng</p>
+                <p>{isInCart ? "Đã có trong giỏ" : "Thêm vào giỏ hàng"}</p>
               </TooltipContent>
             </Tooltip>
           )}

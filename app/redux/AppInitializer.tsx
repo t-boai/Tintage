@@ -15,9 +15,12 @@ import { http } from "@/lib/httpClient";
 
 // interface
 import { User } from "@/app/interfaces/user.interfaces";
+import { CartItem } from "@/app/interfaces/cart.interfaces";
 
 // service
 import { heartService } from "@/app/services/heartService";
+import { cartService } from "@/app/services/cartService";
+import { clearCart, setCartData } from "@/app/redux/slices/cartSlice";
 
 export default function AppInitializer({
   children,
@@ -26,7 +29,10 @@ export default function AppInitializer({
 }) {
   const dispatch = useAppDispatch();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
-  const { isInitialized } = useAppSelector((state) => state.heartList);
+  const { isInitialized: isHeartInit } = useAppSelector(
+    (state) => state.heartList,
+  );
+  const { isInitialized: isCartInit } = useAppSelector((state) => state.cart);
 
   useEffect(() => {
     const initAppData = async () => {
@@ -40,9 +46,10 @@ export default function AppInitializer({
 
       try {
         // api
-        const [profileRes, heartListRes] = await Promise.allSettled([
+        const [profileRes, heartListRes, cartRes] = await Promise.allSettled([
           http.get<{ data: User }>("/user/profile"),
           heartService.getMyHeart(),
+          cartService.getMyCart(),
         ]);
 
         // xử lí profile (auth)
@@ -56,11 +63,29 @@ export default function AppInitializer({
         // xử lí danh sách tim (chỉ khi đã pass auth)
         if (heartListRes.status === "fulfilled" && heartListRes.value)
           dispatch(setHeartList(heartListRes.value));
+
+        // cart
+        if (cartRes.status === "fulfilled" && cartRes.value?.data) {
+          const cartData = cartRes.value.data;
+          const totalItems = cartData.items.reduce(
+            (acc: number, item: CartItem) => acc + item.quantity,
+            0,
+          );
+
+          dispatch(
+            setCartData({
+              items: cartData.items || [],
+              totalItems,
+              totalAmount: cartData.totalAmount,
+            }),
+          );
+        }
       } catch (error) {
         console.error("Lỗi đồng bộ dữ liệu khởi tạo:", error);
         localStorage.removeItem("accessToken");
         dispatch(setLoading(false));
         dispatch(clearHeartList());
+        dispatch(clearCart());
       } finally {
         // Dù API thành công hay lỗi, trả loading về false
         dispatch(setLoading(false));
@@ -71,14 +96,38 @@ export default function AppInitializer({
   }, [dispatch]);
 
   useEffect(() => {
-    // Nếu đã đăng nhập thành công nhưng heartlist chưa được load
-    if (isAuthenticated && !isInitialized) {
-      heartService
-        .getMyHeart()
-        .then((likedIds) => dispatch(setHeartList(likedIds)))
-        .catch((err) => console.error("Lỗi fetch tim sau đăng nhập:", err));
+    // Nếu đã đăng nhập thành công nhưng heartlist và Cart chưa được load
+    if (isAuthenticated) {
+      if (!isHeartInit) {
+        heartService
+          .getMyHeart()
+          .then((likedIds) => dispatch(setHeartList(likedIds)))
+          .catch((err) => console.error("Lỗi fetch tim sau đăng nhập:", err));
+      }
+      if (!isCartInit) {
+        cartService
+          .getMyCart()
+          .then((res) => {
+            if (res?.data) {
+              const totalItems = res.data.items.reduce(
+                (acc: number, item: CartItem) => acc + item.quantity,
+                0,
+              );
+              dispatch(
+                setCartData({
+                  items: res.data.items || [],
+                  totalItems,
+                  totalAmount: res.data.totalAmount,
+                }),
+              );
+            }
+          })
+          .catch((err) =>
+            console.error("Lỗi fetch giỏ hàng sau đăng nhập:", err),
+          );
+      }
     }
-  }, [isAuthenticated, isInitialized, dispatch]);
+  }, [isAuthenticated, isHeartInit, isCartInit, dispatch]);
 
   return <>{children}</>;
 }

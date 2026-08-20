@@ -1,3 +1,4 @@
+import { ApiRes } from "@/app/interfaces/apiRes.interfaces";
 import {
   BlogsItem,
   CategoriesItem,
@@ -7,12 +8,6 @@ import { ProductItem } from "@/app/interfaces/products.interfaces";
 
 // lib
 import { http } from "@/lib/httpClient";
-
-interface ApiRes<T> {
-  code: string;
-  message: string;
-  data: T;
-}
 
 export const homeService = {
   getSlides: async (): Promise<SlideItem[]> => {

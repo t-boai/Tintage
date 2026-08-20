@@ -28,6 +28,7 @@ import { logout, openAuthModal } from "@/app/redux/slices/authSlice";
 // services
 import { authService } from "@/app/services/authService";
 import { clearHeartList } from "@/app/redux/slices/heartListSlice";
+import { clearCart } from "@/app/redux/slices/cartSlice";
 
 export default function HeaderLogin() {
   const { user, isAuthenticated, isLoading } = useAppSelector(
@@ -43,6 +44,7 @@ export default function HeaderLogin() {
   const handleLogout = async () => {
     dispatch(logout());
     dispatch(clearHeartList());
+    dispatch(clearCart());
     toast.add({
       type: "success",
       description: "Đăng xuất thành công <3",

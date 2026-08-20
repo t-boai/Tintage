@@ -1,11 +1,6 @@
+import { ApiRes } from "@/app/interfaces/apiRes.interfaces";
 import { ProductItem } from "@/app/interfaces/products.interfaces";
 import { http } from "@/lib/httpClient";
-
-interface ApiRes<T> {
-  code: string;
-  message: string;
-  data: T;
-}
 
 export const heartService = {
   getMyHeart: async (): Promise<string[]> => {
