@@ -1,11 +1,8 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import Header from "@/app/components/header/header";
-import Footer from "@/app/components/footer/footer";
 
 // Shad
-import { Toaster } from "@/components/ui/toast";
 import { ReduxProvider } from "@/app/redux/provider";
 import AppInitializer from "@/app/redux/AppInitializer";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,12 +29,7 @@ export default function RootLayout({
         <ReduxProvider>
           <AppInitializer>
             <TooltipProvider>
-              <SmoothScroll>
-                <Header />
-                <main className="container mx-auto">{children}</main>
-                <Toaster />
-                <Footer />
-              </SmoothScroll>
+              <SmoothScroll>{children}</SmoothScroll>
             </TooltipProvider>
           </AppInitializer>
         </ReduxProvider>

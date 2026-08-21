@@ -1,4 +1,4 @@
-import ProductList from "@/app/(pages)/(home)/product-list";
+import ProductList from "@/app/(main)/(pages)/(home)/product-list";
 import { ProductItem } from "@/app/interfaces/products.interfaces";
 import { homeService } from "@/app/services/homeService";
 

@@ -3,8 +3,7 @@ import Link from "next/link";
 
 // Components
 import ProductCardSkeleton from "@/app/components/skeleton/ProductCardSkeleton";
-
-import ProductSection from "@/app/(pages)/(home)/product-section";
+import ProductSection from "@/app/(main)/(pages)/(home)/product-section";
 
 export default function HomeS3() {
   return (

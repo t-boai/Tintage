@@ -10,8 +10,8 @@ import { SlideItem } from "@/app/interfaces/home.interfaces";
 import { homeService } from "@/app/services/homeService";
 
 // components
-import HomeCarousel from "@/app/(pages)/(home)/(HomeS1)/home-carousel";
 import HomeCarouselSkeleton from "@/app/components/skeleton/HomeCarouselSkeleton";
+import HomeCarousel from "@/app/(main)/(pages)/(home)/(HomeS1)/home-carousel";
 
 async function BannerData() {
   let slides: SlideItem[] = [];
