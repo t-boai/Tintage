@@ -5,6 +5,7 @@ interface CartState {
   totalItems: number;
   totalAmount: number;
   cartItemMap: Record<string, number>; // Hashmap: { "product_id": quantity }
+  selectedIds: string[];
   isInitialized: boolean;
 }
 
@@ -12,6 +13,7 @@ const initialState: CartState = {
   totalItems: 0,
   totalAmount: 0,
   cartItemMap: {},
+  selectedIds: [],
   isInitialized: false,
 };
 
@@ -19,7 +21,6 @@ export const cartSlice = createSlice({
   name: "cart",
   initialState,
   reducers: {
-    // Gọi lúc khởi tạo App
     setCartData: (
       state,
       action: PayloadAction<{
@@ -73,10 +74,52 @@ export const cartSlice = createSlice({
       state.totalAmount = 0;
       state.totalItems = 0;
       state.cartItemMap = {};
+      state.selectedIds = [];
+    },
+
+    updateItemQuantity: (
+      state,
+      action: PayloadAction<{
+        id: string;
+        quantity: number;
+        oldQuantity: number;
+        price: number;
+      }>,
+    ) => {
+      const { id, quantity, oldQuantity, price } = action.payload;
+      const diff = quantity - oldQuantity;
+
+      state.totalItems += diff;
+      state.totalAmount += diff * price;
+      state.cartItemMap[id] = quantity;
+    },
+
+    toggleSelectItem: (state, action: PayloadAction<string>) => {
+      const id = action.payload;
+      if (state.selectedIds.includes(id)) {
+        state.selectedIds = state.selectedIds.filter((i) => i !== id);
+      } else {
+        state.selectedIds.push(id);
+      }
+    },
+
+    selectAllItems: (state, action: PayloadAction<string[]>) => {
+      state.selectedIds = action.payload;
+    },
+    clearSelectedItems: (state) => {
+      state.selectedIds = [];
     },
   },
 });
 
-export const { setCartData, addCartItem, revertCartItem, clearCart } =
-  cartSlice.actions;
+export const {
+  setCartData,
+  addCartItem,
+  revertCartItem,
+  clearCart,
+  updateItemQuantity,
+  toggleSelectItem,
+  selectAllItems,
+  clearSelectedItems,
+} = cartSlice.actions;
 export default cartSlice.reducer;

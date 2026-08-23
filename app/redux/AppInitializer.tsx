@@ -15,7 +15,6 @@ import { http } from "@/lib/httpClient";
 
 // interface
 import { User } from "@/app/interfaces/user.interfaces";
-import { CartItem } from "@/app/interfaces/cart.interfaces";
 
 // service
 import { heartService } from "@/app/services/heartService";
@@ -67,15 +66,11 @@ export default function AppInitializer({
         // cart
         if (cartRes.status === "fulfilled" && cartRes.value?.data) {
           const cartData = cartRes.value.data;
-          const totalItems = cartData.items.reduce(
-            (acc: number, item: CartItem) => acc + item.quantity,
-            0,
-          );
 
           dispatch(
             setCartData({
               items: cartData.items || [],
-              totalItems,
+              totalItems: cartData.totalItems,
               totalAmount: cartData.totalAmount,
             }),
           );
@@ -109,14 +104,10 @@ export default function AppInitializer({
           .getMyCart()
           .then((res) => {
             if (res?.data) {
-              const totalItems = res.data.items.reduce(
-                (acc: number, item: CartItem) => acc + item.quantity,
-                0,
-              );
               dispatch(
                 setCartData({
                   items: res.data.items || [],
-                  totalItems,
+                  totalItems: res.data.totalItems,
                   totalAmount: res.data.totalAmount,
                 }),
               );
