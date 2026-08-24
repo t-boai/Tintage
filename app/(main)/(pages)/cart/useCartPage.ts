@@ -205,58 +205,61 @@ export function useCartPage() {
     (productId: string, newQuantity: number) => {
       if (newQuantity < 1) return;
 
-      setItems((prevItems) => {
-        const targetItem = prevItems.find((i) => i.product?.id === productId);
-        if (!targetItem || !targetItem.product) return prevItems;
+      // Tìm item từ mảng items hiện tại
+      const targetItem = items.find((i) => i.product?.id === productId);
+      if (!targetItem || !targetItem.product) return;
 
-        const maxStock = targetItem.product.stock ?? 99;
-        if (newQuantity > maxStock) {
+      // Logic kiểm tra số lượng Max Stock
+      const maxStock = targetItem.product.stock ?? 99;
+      if (newQuantity > maxStock) {
+        toast.add({
+          type: "warning",
+          description: `Rất tiếc, kho chỉ còn tối đa ${maxStock} sản phẩm <3`,
+        });
+        return;
+      }
+
+      const oldQuantity = targetItem.quantity;
+      const price = targetItem.product.price;
+
+      //  Side Effect: Dispatch Redux để update Header lập tức
+      dispatch(
+        updateItemQuantity({
+          id: productId,
+          quantity: newQuantity,
+          oldQuantity,
+          price,
+        }),
+      );
+
+      // Side Effect: Gọi API dạng Debounce
+      if (debounceTimers.current[productId]) {
+        clearTimeout(debounceTimers.current[productId]);
+      }
+
+      debounceTimers.current[productId] = setTimeout(async () => {
+        try {
+          await cartService.updateQuantity(productId, newQuantity);
+        } catch (error) {
+          console.error("Lỗi cập nhật số lượng:", error);
           toast.add({
-            type: "warning",
-            description: `Rất tiếc, kho chỉ còn tối đa ${maxStock} sản phẩm <3`,
+            type: "error",
+            description: "Lỗi đồng bộ số lượng, đang khôi phục...",
           });
-          return prevItems;
+          fetchCartData(); // Rollback nếu lỗi server
         }
+      }, 500);
 
-        const oldQuantity = targetItem.quantity;
-        const price = targetItem.product.price;
-
-        // Cập nhật Redux ngay để Header & Subtotal nhảy số lập tức
-        dispatch(
-          updateItemQuantity({
-            id: productId,
-            quantity: newQuantity,
-            oldQuantity,
-            price,
-          }),
-        );
-
-        // Debounce gọi API
-        if (debounceTimers.current[productId]) {
-          clearTimeout(debounceTimers.current[productId]);
-        }
-
-        debounceTimers.current[productId] = setTimeout(async () => {
-          try {
-            await cartService.updateQuantity(productId, newQuantity);
-          } catch (error) {
-            console.error("Lỗi cập nhật số lượng:", error);
-            toast.add({
-              type: "error",
-              description: "Lỗi đồng bộ số lượng, đang khôi phục...",
-            });
-            fetchCartData(); // Rollback
-          }
-        }, 500);
-
-        return prevItems.map((item) =>
+      //   cập nhật UI Local State bằng 1 hàm
+      setItems((prevItems) =>
+        prevItems.map((item) =>
           item.product?.id === productId
             ? { ...item, quantity: newQuantity }
             : item,
-        );
-      });
+        ),
+      );
     },
-    [dispatch, fetchCartData],
+    [items, dispatch, fetchCartData],
   );
 
   // Xóa 1 sản phẩm khỏi giỏ
@@ -360,7 +363,7 @@ export function useCartPage() {
         type: "success",
         description: "Đã dọn dẹp các sản phẩm hết hàng <3",
       });
-      fetchCartData(); // Đồng bộ lại từ BE 
+      fetchCartData(); // Đồng bộ lại từ BE
     } catch (error) {
       console.error("Lỗi dọn dẹp sản phẩm không khả dụng:", error);
       toast.add({
