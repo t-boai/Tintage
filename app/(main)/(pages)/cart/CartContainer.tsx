@@ -7,6 +7,7 @@ import SelectItems from "@/app/components/selectItems/SelectItems";
 import { useCartPage } from "@/app/(main)/(pages)/cart/useCartPage";
 import CartItemList from "@/app/(main)/(pages)/cart/CartItemList";
 import CartSummary from "@/app/(main)/(pages)/cart/CartSummary";
+import CartPageSkeleton from "@/app/components/skeleton/CartPageSkeleton";
 
 export default function CartContainer() {
   const {
@@ -42,36 +43,40 @@ export default function CartContainer() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <div className="space-y-4 lg:col-span-8">
-            <FreeshipProcess subtotal={subtotal} />
+        {isLoading ? (
+          <CartPageSkeleton />
+        ) : (
+          <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
+            <div className="space-y-4 lg:col-span-8">
+              <FreeshipProcess subtotal={subtotal} />
 
-            <SelectItems
-              totalCount={availableItems.length}
-              selectedCount={selectedIds.length}
-              isAllSelected={isAllSelected}
-              disabled={availableItems.length === 0}
-              onToggleSelectAll={handleToggleSelectAll}
-              onRemoveSelected={handleRemoveSelectedItems}
-            />
+              <SelectItems
+                totalCount={availableItems.length}
+                selectedCount={selectedIds.length}
+                isAllSelected={isAllSelected}
+                disabled={availableItems.length === 0}
+                onToggleSelectAll={handleToggleSelectAll}
+                onRemoveSelected={handleRemoveSelectedItems}
+              />
 
-            <CartItemList
-              items={items}
-              selectedIds={selectedIds}
-              onToggleSelectItem={handleToggleSelectItem}
-              onUpdateQuantity={handleUpdateQuantity}
-              onRemoveItem={handleRemoveItem}
-              onClearUnavailable={handleClearUnavailableItems}
-            />
+              <CartItemList
+                items={items}
+                selectedIds={selectedIds}
+                onToggleSelectItem={handleToggleSelectItem}
+                onUpdateQuantity={handleUpdateQuantity}
+                onRemoveItem={handleRemoveItem}
+                onClearUnavailable={handleClearUnavailableItems}
+              />
+            </div>
+
+            <div className="lg:col-span-4">
+              <CartSummary
+                selectedCount={selectedIds.length}
+                subtotal={subtotal}
+              />
+            </div>
           </div>
-
-          <div className="lg:col-span-4">
-            <CartSummary
-              selectedCount={selectedIds.length}
-              subtotal={subtotal}
-            />
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
