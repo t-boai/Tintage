@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ShoppingCart, ShoppingBag, Trash2 } from "lucide-react";
 
 // Shadcn UI
@@ -41,6 +41,7 @@ export default function HeaderCartHover({ count }: Props) {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const pathname = usePathname();
   const isCartPage = pathname === "/cart";
+  const router = useRouter();
 
   const [items, setItems] = React.useState<CartItem[]>([]);
   const [total, setTotal] = React.useState(0);
@@ -80,7 +81,11 @@ export default function HeaderCartHover({ count }: Props) {
     if (!isAuthenticated) {
       e.preventDefault();
       dispatch(openAuthModal("login"));
+
+      return;
     }
+
+    router.push("/cart");
   };
 
   const handleDeleteItem = async (
@@ -130,7 +135,16 @@ export default function HeaderCartHover({ count }: Props) {
       <Tooltip>
         <TooltipTrigger
           render={
-            <div className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-(--primaryCus)">
+            <div
+              className="relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full text-(--primaryCus)"
+              onClick={() => {
+                toast.add({
+                  type: "info",
+                  description: "Bạn đang ở trang giỏ hàng <3",
+                });
+                return;
+              }}
+            >
               <ShoppingCart className="h-5 w-5" />
               {count > 0 && isAuthenticated && (
                 <Badge className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-none bg-(--primaryCus) p-0 text-[10px] text-white shadow-sm">

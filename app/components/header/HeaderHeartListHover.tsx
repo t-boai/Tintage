@@ -33,6 +33,9 @@ import { formatPrice } from "@/app/helper/format-price";
 import HeaderHeartListItemSkeleton from "@/app/components/skeleton/HeaderHeartListItemSkeleton";
 import { openAuthModal } from "@/app/redux/slices/authSlice";
 
+// hooks
+import useCart from "@/app/hooks/useCart";
+
 interface heartlistItem {
   heartId?: string;
   likedAt?: string;
@@ -46,6 +49,10 @@ interface Props {
 export default function HeaderHeartListHover({ count }: Props) {
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const dispatch = useAppDispatch();
+
+  const cartItemMap = useAppSelector((state) => state.cart.cartItemMap || {});
+
+  const { handleAddToCart, isAdding } = useCart();
 
   const [items, setItems] = React.useState<heartlistItem[]>([]);
   const [page, setPage] = React.useState(1);
@@ -139,12 +146,6 @@ export default function HeaderHeartListHover({ count }: Props) {
     }
   };
 
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toast.add({ type: "info", description: "Đã thêm vào giỏ hàng!" });
-  };
-
   const handleIconClick = (e: React.MouseEvent) => {
     if (!isAuthenticated) {
       e.preventDefault();
@@ -222,8 +223,10 @@ export default function HeaderHeartListHover({ count }: Props) {
                     const name = productData.name || "Sản phẩm Tintage";
                     const price = productData.price || 0;
                     const image = productData.image || "/placeholder-image.png";
-                    const isOutOfStock = productData.stock === 0;
+                    const isOutOfStock = (productData.stock ?? 0) <= 0;
                     const slug = productData.slug || "#";
+
+                    const isInCart = !!cartItemMap[id];
 
                     return (
                       <Link
@@ -263,7 +266,7 @@ export default function HeaderHeartListHover({ count }: Props) {
                                 variant="ghost"
                                 size="icon"
                                 onClick={(e) => handleRemoveHeart(e, id)}
-                                className="h-7 w-7 text-neutral-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-500"
+                                className="h-7 w-7 cursor-pointer text-neutral-400 transition-colors duration-200 hover:bg-red-50 hover:text-red-500"
                               >
                                 <Trash2 className="h-3.5 w-3.5" />
                               </Button>
@@ -273,10 +276,35 @@ export default function HeaderHeartListHover({ count }: Props) {
                                   type="button"
                                   variant="outline"
                                   size="icon"
-                                  onClick={handleAddToCart}
-                                  className="h-7 w-7 border-(--primaryCus) text-(--primaryCus) transition-colors duration-200 hover:bg-(--primaryCus) hover:text-white"
+                                  disabled={isAdding && !isInCart}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+
+                                    if (isInCart) {
+                                      toast.add({
+                                        type: "info",
+                                        description:
+                                          "Sản phẩm đã có trong giỏ hàng <3",
+                                      });
+                                      return;
+                                    }
+
+                                    handleAddToCart({ id, price }, () =>
+                                      dispatch(openAuthModal("login")),
+                                    );
+                                  }}
+                                  className={`h-7 w-7 cursor-pointer border-(--primaryCus) transition-all duration-200 disabled:cursor-not-allowed disabled:opacity-50 ${
+                                    isInCart
+                                      ? "bg-(--primaryCus) text-white hover:bg-(--primaryCus)/90"
+                                      : "text-(--primaryCus) hover:bg-(--primaryCus) hover:text-white"
+                                  }`}
                                 >
-                                  <ShoppingBag className="h-3.5 w-3.5" />
+                                  <ShoppingBag
+                                    className={`h-3.5 w-3.5 transition-colors ${
+                                      isInCart ? "fill-white/30 text-white" : ""
+                                    }`}
+                                  />
                                 </Button>
                               )}
                             </div>
