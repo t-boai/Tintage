@@ -145,20 +145,16 @@ export default function HeaderLogin() {
         </div>
       ) : (
         /*Chưa Login */
-        <HoverCard>
-          <HoverCardTrigger
-            delay={10}
-            closeDelay={100}
-            render={
-              <Button
-                className="transitionCus cursor-pointer border bg-(--primaryCus) text-white hover:border-(--primaryCus) hover:text-(--primaryCus)"
-                variant="outline"
-                onClick={() => handleTabChange("login")}
-              >
-                Đăng nhập
-              </Button>
-            }
-          />
+        <HoverCard openDelay={10} closeDelay={100}>
+          <HoverCardTrigger asChild>
+            <Button
+              className="transitionCus cursor-pointer border bg-(--primaryCus) text-white hover:border-(--primaryCus) hover:text-(--primaryCus)"
+              variant="outline"
+              onClick={() => handleTabChange("login")}
+            >
+              Đăng nhập
+            </Button>
+          </HoverCardTrigger>
           <HoverCardContent className="mt-2 flex w-64 flex-col gap-0.5">
             <div className="text-sm">
               Đăng nhập hoặc tạo tài khoản miễn phí.
