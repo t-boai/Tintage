@@ -19,27 +19,45 @@ import { formatPrice } from "@/app/helper/format-price";
 // Shadcn UI
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/toast";
-
-// Redux & Hooks
-import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
-import { openAuthModal } from "@/app/redux/slices/authSlice";
-import useProductHeart from "@/app/hooks/useProductHeart";
-import useCart from "@/app/hooks/useCart";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-export default function ProductCard({ product }: { product: ProductItem }) {
+// Redux & Hooks
+import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
+import { openAuthModal } from "@/app/redux/slices/authSlice";
+
+// hooks
+import useProductHeart from "@/app/hooks/useProductHeart";
+import useCart from "@/app/hooks/useCart";
+
+// useSyncExternalStore
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+const ProductCard = ({ product }: { product: ProductItem }) => {
   const dispatch = useAppDispatch();
   const targetId = product.id || "";
+
+  const isMounted = React.useSyncExternalStore(
+    emptySubscribe,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
+
   const { isAuthenticated } = useAppSelector((state) => state.auth);
   const { isLiked, handleToggle } = useProductHeart(targetId);
   const { handleAddToCart, isAdding } = useCart();
-  const isInCart = useAppSelector(
+
+  const rawIsInCart = useAppSelector(
     (state) => isAuthenticated && !!state.cart.cartItemMap[targetId],
   );
+
+  const isInCart = isMounted ? rawIsInCart : false;
+  const safeIsLiked = isMounted ? isLiked : false;
 
   const handleClickHeart = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -85,8 +103,9 @@ export default function ProductCard({ product }: { product: ProductItem }) {
         <Image
           src={product.image || "/placeholder-image.png"}
           alt={product.name || "Sản phẩm Tintage"}
+          decoding="async"
           fill
-          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
+          unoptimized={true}
           className={`object-cover transition-transform duration-700 group-hover:scale-110 ${
             isOutOfStock ? "opacity-50 grayscale" : ""
           }`}
@@ -155,7 +174,7 @@ export default function ProductCard({ product }: { product: ProductItem }) {
               <Heart
                 suppressHydrationWarning
                 className={`h-4 w-4 transition-colors ${
-                  isLiked
+                  safeIsLiked
                     ? "fill-(--primaryCus) text-(--primaryCus)"
                     : "text-neutral-500"
                 }`}
@@ -254,4 +273,6 @@ export default function ProductCard({ product }: { product: ProductItem }) {
       </div>
     </Link>
   );
-}
+};
+
+export default React.memo(ProductCard);

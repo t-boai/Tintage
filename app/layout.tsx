@@ -6,7 +6,6 @@ import "./globals.css";
 import { ReduxProvider } from "@/app/redux/provider";
 import AppInitializer from "@/app/redux/AppInitializer";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import SmoothScroll from "@/app/components/smoothScroll/SmoothScroll";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -28,9 +27,7 @@ export default function RootLayout({
       <body className="flex min-h-full flex-col">
         <ReduxProvider>
           <AppInitializer>
-            <TooltipProvider>
-              <SmoothScroll>{children}</SmoothScroll>
-            </TooltipProvider>
+            <TooltipProvider>{children} </TooltipProvider>
           </AppInitializer>
         </ReduxProvider>
       </body>
