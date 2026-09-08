@@ -34,6 +34,8 @@ export interface ProductItem {
   originalPrice: number;
   location: string;
   stock: number;
+  gender?: string;
+  colors?: string[];
   material: string;
   viewsCount: number;
   isLiked: boolean;
