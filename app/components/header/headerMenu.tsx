@@ -1,27 +1,32 @@
-"use client";
-
-import { headerMenuConfig } from "@/app/config/headerMenu.config";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 
-export default function HeaderMenu() {
-  const pathname = usePathname();
+import { CategoriesItem } from "@/app/interfaces/home.interfaces";
+import { homeService } from "@/app/services/homeService";
+
+export default async function HeaderMenu() {
+  let categories: CategoriesItem[] = [];
+
+  try {
+    const data = await homeService.getCategories();
+    if (Array.isArray(data) && data.length > 0) {
+      categories = data.slice(0, 4);
+    }
+  } catch (error) {
+    console.error("Lỗi fetch categories ở Header:", error);
+  }
+
+  if (!categories || categories.length === 0) return null;
 
   return (
     <nav className="hidden items-center gap-1 xl:flex">
-      {headerMenuConfig.map((item) => {
-        const isActive = pathname === `/${item.value}`;
+      {categories.map((item) => {
         return (
           <Link
-            href={`/${item.value}`}
-            key={item.value}
-            className={`rounded-full px-4 py-2.5 text-sm font-bold transition-all duration-200 active:scale-95 ${
-              isActive
-                ? "bg-neutral-900 text-white"
-                : "text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900"
-            }`}
+            href={`/search?category=${item.slug}`}
+            key={item.slug}
+            className={`active:scale-95text-neutral-600 rounded-full px-4 py-2.5 text-sm font-bold transition-all duration-200 hover:bg-neutral-100 hover:text-neutral-900`}
           >
-            {item.label}
+            {item.name}
           </Link>
         );
       })}

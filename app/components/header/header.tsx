@@ -5,10 +5,10 @@ import { MessageCircle } from "lucide-react";
 
 // Components
 import HeaderMenu from "@/app/components/header/headerMenu";
-import SearchHeader from "@/app/components/searchHeader/searchHeader";
 import HeaderIcons from "@/app/components/header/headerIcon";
 import AuthModal from "@/app/components/authModal/authModal";
 import HeaderLogin from "@/app/components/header/headerLogin";
+import HeaderSearch from "@/app/components/header/HeaderSearch";
 
 export default function Header() {
   return (
@@ -26,11 +26,12 @@ export default function Header() {
               className="h-8 w-auto object-contain sm:h-10"
             />
           </Link>
+
           <HeaderMenu />
         </div>
 
         <div className="hidden flex-1 justify-center md:flex">
-          <SearchHeader />
+          <HeaderSearch />
         </div>
 
         <div className="flex shrink-0 items-center gap-3 sm:gap-4">

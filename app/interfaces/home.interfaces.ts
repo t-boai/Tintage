@@ -14,7 +14,7 @@ export interface CategoriesItem {
   id: number | string;
   name: string;
   image: string;
-  href: string;
+  slug: string;
 }
 
 export interface BlogsItem {
