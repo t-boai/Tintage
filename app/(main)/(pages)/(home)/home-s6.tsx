@@ -1,20 +1,38 @@
 "use client";
 
 import * as React from "react";
+import { Loader2 } from "lucide-react";
 
 // Shadcn UI
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 
 export default function HomeS6() {
   const [email, setEmail] = React.useState("");
+  const [isPending, startTransition] = React.useTransition();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || isPending) return;
 
-    alert(`Cảm ơn bạn đã đăng ký với email: ${email}`);
-    setEmail("");
+    startTransition(async () => {
+      try {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        toast.add({
+          type: "success",
+          description: `Đăng ký thành công email: ${email}`,
+        });
+        setEmail("");
+      } catch (error) {
+        console.error("Lỗi khi đăng kí email nhận deal: ", error);
+        toast.add({
+          type: "error",
+          description: "Có lỗi xảy ra, vui lòng thử lại sau <3",
+        });
+      }
+    });
   };
 
   return (
@@ -42,15 +60,21 @@ export default function HomeS6() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 rounded-2xl border-neutral-700/80 bg-neutral-800/80 px-4 text-sm text-white placeholder:text-neutral-500 focus-visible:border-(--primaryCus) focus-visible:ring-1 focus-visible:ring-(--primaryCus)"
+                disabled={isPending}
+                className="h-12 rounded-2xl border-neutral-700/80 bg-neutral-800/80 px-4 text-sm text-white placeholder:text-neutral-500 focus-visible:border-(--primaryCus) focus-visible:ring-1 focus-visible:ring-(--primaryCus) disabled:opacity-50"
               />
             </div>
 
             <Button
               type="submit"
-              className="h-12 rounded-2xl bg-(--primaryCus) px-7 text-sm font-semibold text-white transition-all duration-200 hover:bg-(--primaryHov) active:scale-95"
+              disabled={isPending}
+              className="h-12 min-w-30 rounded-2xl bg-(--primaryCus) px-7 text-sm font-semibold text-white transition-all duration-200 hover:bg-(--primaryHov) active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
             >
-              Đăng ký
+              {isPending ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                "Đăng ký"
+              )}
             </Button>
           </form>
         </div>

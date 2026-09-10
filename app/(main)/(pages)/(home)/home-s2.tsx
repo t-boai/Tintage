@@ -17,7 +17,7 @@ async function CategoryList() {
   try {
     const data = await homeService.getCategories();
 
-    if (Array.isArray(data) && data.length > 0) categories = data;
+    if (Array.isArray(data) && data.length > 0) categories = data.slice(0, 6);
   } catch (error) {
     console.error("Home Categories-Lỗi fetch Api: ", error);
   }
@@ -35,14 +35,15 @@ async function CategoryList() {
       {categories.map((cat) => (
         <Link
           key={cat.id}
-          href={cat.href}
+          href={`/search?category=${cat.slug}`}
           className="group relative aspect-4/5 w-full overflow-hidden rounded-[20px] bg-neutral-100 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md"
         >
           <Image
-            src={cat.image}
-            alt={cat.name}
+            src={cat.image || "/placeholder-image.png"}
+            alt={cat.name || "Danh mục"}
             fill
             sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
+            decoding="async"
             className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
 
@@ -67,7 +68,7 @@ export default async function HomeS2() {
           Danh mục nổi bật
         </h2>
         <Link
-          href="/categories"
+          href="/search"
           className="text-sm font-medium text-(--primaryCus) transition-colors hover:underline"
         >
           Xem tất cả danh mục

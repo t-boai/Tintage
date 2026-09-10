@@ -1,10 +1,8 @@
 import * as React from "react";
 
-// icons
-import { Leaf, ShieldCheck, Van } from "lucide-react";
-
-// interface
+// interface and config
 import { SlideItem } from "@/app/interfaces/home.interfaces";
+import { TRUST_BADGES } from "@/app/config/trustBadges.config";
 
 // service
 import { homeService } from "@/app/services/homeService";
@@ -28,47 +26,30 @@ async function BannerData() {
 
 export default async function HomeS1() {
   return (
-    <div className="my-10">
+    <div className="my-6 md:my-10">
       <React.Suspense fallback={<HomeCarouselSkeleton />}>
         <BannerData />
       </React.Suspense>
 
-      <div className="center mt-[8vh] gap-10">
-        <div className="center gap-3">
-          <div className="flex items-center justify-center rounded-2xl bg-[#FFDADA] p-2.5">
-            <ShieldCheck size={30} className="center text-[#FF385C]" />
-          </div>
-          <div>
-            <div className="">Xác thực 100%</div>
-            <div className="text-[.9vw] text-gray-500">
-              Mọi sản phẩm đều được kiểm định chất lượng và độ mới nghiêm ngặt.
+      <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-3 md:gap-10">
+        {TRUST_BADGES.map((badge, idx) => (
+          <div
+            key={idx}
+            className="flex items-center gap-4 sm:flex-col sm:text-center md:flex-row md:text-left"
+          >
+            <div
+              className={`flex shrink-0 items-center justify-center rounded-2xl p-3 ${badge.bg}`}
+            >
+              {badge.icon}
+            </div>
+            <div>
+              <h3 className="font-bold text-neutral-900">{badge.title}</h3>
+              <p className="mt-1 text-xs text-neutral-500 md:text-sm">
+                {badge.desc}
+              </p>
             </div>
           </div>
-        </div>
-
-        <div className="center gap-3">
-          <div className="flex items-center justify-center rounded-2xl bg-[#F0DBFF] p-2.5">
-            <Van size={30} className="center text-[#7742AA]" />
-          </div>
-          <div>
-            <div className="">Giao hàng hỏa tốc</div>
-            <div className="text-[.9vw] text-gray-500">
-              Nhận hàng trong vòng 2-4 giờ tại các thành phố lớn.
-            </div>
-          </div>
-        </div>
-
-        <div className="center gap-3">
-          <div className="flex items-center justify-center rounded-2xl bg-[#DCFCE7] p-2.5">
-            <Leaf size={30} className="center text-[#15803D]" />
-          </div>
-          <div>
-            <div className="">Lối sống Xanh</div>
-            <div className="text-[.9vw] text-gray-500">
-              Góp phần giảm thiểu rác thải thời trang qua việc tái sử dụng.
-            </div>
-          </div>
-        </div>
+        ))}
       </div>
     </div>
   );
