@@ -69,6 +69,12 @@ export const cartService = {
     return await http.delete(`/cart/delete/${productId}`);
   },
 
+  deleteMultipleItems: async (productIds: string[]) => {
+    return await http.post("/cart/delete-multiple", {
+      productIds,
+    });
+  },
+
   clearCart: async () => {
     return await http.delete("/cart/clear-cart");
   },
