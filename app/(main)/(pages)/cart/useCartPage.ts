@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import debounce from "lodash/debounce";
 
 // redux
 import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
@@ -31,7 +32,22 @@ export function useCartPage() {
 
   const [reloadTrigger, setReloadTrigger] = React.useState(0);
 
-  const debounceTimers = React.useRef<Record<string, NodeJS.Timeout>>({});
+  const debouncedUpdateApi = React.useMemo(
+    () =>
+      debounce(async (productId: string, newQuantity: number) => {
+        try {
+          await cartService.updateQuantity(productId, newQuantity);
+        } catch (error) {
+          console.error("Lỗi cập nhật số lượng:", error);
+          toast.add({
+            type: "error",
+            description: "Lỗi đồng bộ số lượng, đang khôi phục...",
+          });
+          setReloadTrigger((prev) => prev + 1); // Rollback
+        }
+      }, 500),
+    [],
+  );
 
   React.useEffect(() => {
     let isMounted = true;
@@ -75,7 +91,7 @@ export function useCartPage() {
           }),
         );
 
-        //  Tự động tick chọn tất cả các sản phẩm có thể mua (Chỉ chạy lần đầu)
+        //  Tự động tick chọn tất cả các sản phẩm có thể mua
         if (reloadTrigger === 0) {
           const validIds = formattedAvailable
             .filter((item) => item.product?.id)
@@ -98,13 +114,17 @@ export function useCartPage() {
 
     return () => {
       isMounted = false;
-      Object.values(debounceTimers.current).forEach((timer) =>
-        clearTimeout(timer),
-      );
     };
   }, [dispatch, reloadTrigger]);
 
-  //  hàm trigger fetch lại data
+  // Dọn dẹp debounce khi rời trang
+  React.useEffect(() => {
+    return () => {
+      debouncedUpdateApi.cancel();
+    };
+  }, [debouncedUpdateApi]);
+
+  // trigger fetch lại data
   const fetchCartData = React.useCallback(() => {
     setReloadTrigger((prev) => prev + 1);
   }, []);
@@ -140,7 +160,7 @@ export function useCartPage() {
     [selectedItems],
   );
 
-  // handlers giao diện (tích chọn và giao diện)
+  // handlers giao diện (tích chọn)
   const handleToggleSelectAll = React.useCallback(() => {
     if (isAllSelected) {
       dispatch(clearSelectedItems());
@@ -175,7 +195,7 @@ export function useCartPage() {
       const oldQuantity = targetItem.quantity;
       const price = targetItem.product.price;
 
-      // Optimistic Update Redux & Local State
+      //  Optimistic Update Redux and Local State
       dispatch(
         updateItemQuantity({
           id: productId,
@@ -193,28 +213,11 @@ export function useCartPage() {
         ),
       );
 
-      // Debounce
-      if (debounceTimers.current[productId]) {
-        clearTimeout(debounceTimers.current[productId]);
-      }
-
-      debounceTimers.current[productId] = setTimeout(async () => {
-        try {
-          await cartService.updateQuantity(productId, newQuantity);
-        } catch (error) {
-          console.error("Lỗi cập nhật số lượng:", error);
-          toast.add({
-            type: "error",
-            description: "Lỗi đồng bộ số lượng, đang khôi phục...",
-          });
-          fetchCartData();
-        }
-      }, 500);
+      // Debounce API
+      debouncedUpdateApi(productId, newQuantity);
     },
-    [items, dispatch, fetchCartData],
+    [items, dispatch, debouncedUpdateApi],
   );
-
-  // Handlers gọi api xóa (optimistic update + api)
 
   // Xóa 1 sản phẩm
   const handleRemoveItem = React.useCallback(
@@ -237,7 +240,6 @@ export function useCartPage() {
         dispatch(toggleSelectItem(productId));
       }
 
-      // Chờ API
       try {
         await cartService.deleteItem(productId);
         toast.add({
@@ -310,7 +312,6 @@ export function useCartPage() {
     // Cập nhật UI
     setItems((prev) => prev.filter((item) => item.isAvailable));
 
-    // Chờ API
     try {
       await cartService.clearUnavailableItems();
       toast.add({
