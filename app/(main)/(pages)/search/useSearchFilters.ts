@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
+import debounce from "lodash/debounce";
 
 // interfaces
 import { FiltersInfoData } from "@/app/interfaces/apiRes.interfaces";
@@ -68,6 +69,7 @@ export function useSearchFilters(filtersInfo?: FiltersInfoData | null) {
     return filters;
   }, [searchParams, filtersInfo]);
 
+  // Cập nhật URL (Category, Giá, Sắp xếp)
   const updateUrl = React.useCallback(
     (params: URLSearchParams) => {
       params.delete("page");
@@ -77,6 +79,24 @@ export function useSearchFilters(filtersInfo?: FiltersInfoData | null) {
     },
     [pathname, router],
   );
+
+  // Cập nhật URL (Debounce)  Màu sắc, Brand, Size khi bấm liên tục)
+  const debouncedUpdateUrl = React.useMemo(
+    () =>
+      debounce((params: URLSearchParams) => {
+        params.delete("page");
+        startTransition(() => {
+          router.push(`${pathname}?${params.toString()}`, { scroll: false });
+        });
+      }, 300),
+    [pathname, router],
+  );
+
+  React.useEffect(() => {
+    return () => {
+      debouncedUpdateUrl.cancel();
+    };
+  }, [debouncedUpdateUrl]);
 
   const handleSortSelect = React.useCallback(
     (value: string, query: string) => {
@@ -101,9 +121,9 @@ export function useSearchFilters(filtersInfo?: FiltersInfoData | null) {
         existing.push(value);
         params.set(key, existing.join(","));
       }
-      updateUrl(params);
+      debouncedUpdateUrl(params);
     },
-    [searchParams, updateUrl],
+    [searchParams, debouncedUpdateUrl],
   );
 
   const handleSingleFilterChange = React.useCallback(
@@ -111,7 +131,7 @@ export function useSearchFilters(filtersInfo?: FiltersInfoData | null) {
       const params = new URLSearchParams(Array.from(searchParams.entries()));
       if (params.get(key) === value) params.delete(key);
       else params.set(key, value);
-      updateUrl(params);
+      updateUrl(params); // Single filter thì gọi liền, không delay
     },
     [searchParams, updateUrl],
   );

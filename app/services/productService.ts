@@ -52,7 +52,10 @@ export const productService = {
     }
   },
 
-  searchProducts: async (params: SearchProductsParams) => {
+  searchProducts: async (
+    params: SearchProductsParams,
+    signal?: AbortSignal,
+  ) => {
     try {
       const queryParams = new URLSearchParams();
 
@@ -79,6 +82,7 @@ export const productService = {
 
       const res = await http.get<ApiRes<ProductItem[]>>(endpoint, {
         cache: "no-store",
+        signal: signal,
       });
 
       return {
@@ -87,6 +91,17 @@ export const productService = {
         filtersInfo: res?.filtersInfo || null,
       };
     } catch (error) {
+      const err = error as Error;
+
+      if (err.name === "AbortError" || err.message?.includes("canceled")) {
+        console.log("Đã hủy request tìm kiếm cũ thành công!");
+        return {
+          data: [],
+          pagination: null,
+          filtersInfo: null,
+        };
+      }
+
       console.error("productService - Lỗi tìm kiếm SP:", error);
       return {
         data: [],

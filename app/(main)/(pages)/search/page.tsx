@@ -4,6 +4,7 @@ import { productService } from "@/app/services/productService";
 
 // com
 import SearchContainer from "@/app/(main)/(pages)/search/SearchContainer";
+import JsonLd from "@/app/components/seo/JsonLd";
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>;
@@ -46,13 +47,27 @@ export default async function SearchPage({ searchParams }: PageProps) {
   const initialHasNextPage = res.pagination?.hasNextPage || false;
   const totalItems = res.pagination?.totalItems || 0;
 
+  const itemListSchema = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    itemListElement: initialData.map((prod, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      url: `${process.env.NEXT_PUBLIC_SITE_URL || "https://tintage.vn"}/products/${prod.slug}`,
+    })),
+  };
+
   return (
-    <SearchContainer
-      initialQuery={keyword}
-      initialData={initialData}
-      filtersInfo={filtersInfo}
-      initialHasNextPage={initialHasNextPage}
-      totalItems={totalItems}
-    />
+    <>
+      <JsonLd data={itemListSchema} />
+
+      <SearchContainer
+        initialQuery={keyword}
+        initialData={initialData}
+        filtersInfo={filtersInfo}
+        initialHasNextPage={initialHasNextPage}
+        totalItems={totalItems}
+      />
+    </>
   );
 }

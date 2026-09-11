@@ -38,6 +38,8 @@ export default function SearchContainer({
 
   const [prevData, setPrevData] = React.useState(initialData);
 
+  const abortControllerRef = React.useRef<AbortController | null>(null);
+
   if (initialData !== prevData) {
     setPrevData(initialData);
     setProducts(initialData || []);
@@ -50,24 +52,35 @@ export default function SearchContainer({
     if (isFetching || !hasMore) return;
     setIsFetching(true);
 
+    // Nếu có một Request trước đó đang chạy chưa xong -> bỏ
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       const nextPage = page + 1;
 
-      const res = await productService.searchProducts({
-        keyword: initialQuery,
-        category: searchParams.get("category") || undefined,
-        brands: searchParams.get("brands") || undefined,
-        colors: searchParams.get("colors") || undefined,
-        genders: searchParams.get("genders") || undefined,
-        sizes: searchParams.get("sizes") || undefined,
-        condition: searchParams.get("condition") || undefined,
-        minPrice: searchParams.get("minPrice") || undefined,
-        maxPrice: searchParams.get("maxPrice") || undefined,
-        sort: searchParams.get("sort") || undefined,
-        page: nextPage,
-        limit: 16,
-        getFilters: false,
-      });
+      const res = await productService.searchProducts(
+        {
+          keyword: initialQuery,
+          category: searchParams.get("category") || undefined,
+          brands: searchParams.get("brands") || undefined,
+          colors: searchParams.get("colors") || undefined,
+          genders: searchParams.get("genders") || undefined,
+          sizes: searchParams.get("sizes") || undefined,
+          condition: searchParams.get("condition") || undefined,
+          minPrice: searchParams.get("minPrice") || undefined,
+          maxPrice: searchParams.get("maxPrice") || undefined,
+          sort: searchParams.get("sort") || undefined,
+          page: nextPage,
+          limit: 16,
+          getFilters: false,
+        },
+        controller.signal,
+      );
 
       if (res.data && res.data.length > 0) {
         setProducts((prev) => [...prev, ...res.data]);
@@ -77,12 +90,27 @@ export default function SearchContainer({
         setHasMore(false);
       }
     } catch (error) {
+      const err = error as Error;
+
+      if (err.name === "AbortError" || err.message?.includes("canceled")) {
+        console.log("⚡ [FE] Đã hủy Request cũ để ưu tiên Request mới!");
+        return;
+      }
+
       console.error("Lỗi khi cuộn tải thêm sản phẩm:", error);
       setHasMore(false);
     } finally {
       setIsFetching(false);
     }
   }, [isFetching, hasMore, page, initialQuery, searchParams]);
+
+  React.useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white py-6 md:py-10">

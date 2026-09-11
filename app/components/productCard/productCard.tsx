@@ -105,7 +105,7 @@ const ProductCard = ({ product }: { product: ProductItem }) => {
           alt={product.name || "Sản phẩm Tintage"}
           decoding="async"
           fill
-          unoptimized={true}
+          sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, 17vw"
           className={`object-cover transition-transform duration-700 group-hover:scale-110 ${
             isOutOfStock ? "opacity-50 grayscale" : ""
           }`}
