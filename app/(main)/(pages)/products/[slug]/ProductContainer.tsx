@@ -1,4 +1,5 @@
 import * as React from "react";
+import dynamic from "next/dynamic";
 import { Sparkles } from "lucide-react";
 
 // components
@@ -7,11 +8,17 @@ import BreadCrumbs, {
 } from "@/app/(main)/(pages)/products/[slug]/BreadCrumbs";
 import PurchaseProduct from "@/app/(main)/(pages)/products/[slug]/PurchaseProduct";
 import InfoProduct from "@/app/(main)/(pages)/products/[slug]/InfoProduct";
-import MightLike from "@/app/components/mightLike/MightLike";
 
 // interfaces
 import { ProductItem } from "@/app/interfaces/products.interfaces";
 import ProductCardSkeleton from "@/app/components/skeleton/ProductCardSkeleton";
+
+const MightLike = dynamic(
+  () => import("@/app/components/mightLike/MightLike"),
+  {
+    ssr: true,
+  },
+);
 
 interface ProductContainerProps {
   product: ProductItem;
@@ -40,13 +47,18 @@ export default function ProductContainer({ product }: ProductContainerProps) {
       : undefined;
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] py-6 text-neutral-900">
+    <div className="min-h-fit bg-[#FAFAFA] py-6 text-neutral-900">
       <div className="container mx-auto">
         <BreadCrumbs items={breadcrumbData} />
 
-        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
-          <InfoProduct product={product} />
-          <PurchaseProduct product={product} />
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-start">
+          <div className="lg:sticky lg:top-24 lg:col-span-6">
+            <InfoProduct product={product} />
+          </div>
+
+          <div className="lg:col-span-6">
+            <PurchaseProduct product={product} />
+          </div>
         </div>
 
         <React.Suspense

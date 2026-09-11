@@ -109,7 +109,7 @@ export default function InfiniteMightLike({
   ]);
 
   return (
-    <div className="w-full pb-16">
+    <div className="w-full">
       <VirtuosoGrid
         useWindowScroll
         data={products}
@@ -123,8 +123,8 @@ export default function InfiniteMightLike({
           Footer: () =>
             // hiện khi fetch
             isFetching && canFetchMore ? (
-              <div className="col-span-full my-6 flex h-16 w-full items-center justify-center">
-                <ProductCardSkeleton count={10} />
+              <div className="mt-5 grid w-full grid-cols-2 gap-3 sm:grid-cols-3 md:gap-5 lg:grid-cols-5">
+                <ProductCardSkeleton count={5} />
               </div>
             ) : (
               <div className="h-6 w-full" />

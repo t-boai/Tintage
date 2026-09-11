@@ -1,4 +1,4 @@
-import { Astroid } from "lucide-react";
+import { HeartHandshake } from "lucide-react";
 
 // services
 import { productService } from "@/app/services/productService";
@@ -66,16 +66,16 @@ export default async function MightLike({
   if (initialProducts.length === 0) return null;
 
   return (
-    <div className="mt-16 border-t-4 border-neutral-900 pt-10">
-      <div className="mb-6 flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl border-2 border-neutral-900 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-          <Astroid className="h-6 w-6 text-(--primaryCus)" />
+    <div className="mt-16 border-t border-neutral-200 pt-12">
+      <div className="mb-8 flex items-center gap-3.5">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-red-100 bg-red-50 text-red-500 shadow-sm">
+          <HeartHandshake className="h-7 w-7" strokeWidth={1.5} />
         </div>
         <div>
           <h2 className="text-xl font-bold tracking-tight text-neutral-900 md:text-2xl">
             {title}
           </h2>
-          <p className="text-[11px] font-bold tracking-widest text-neutral-500">
+          <p className="mt-1 text-[11px] font-semibold tracking-wider text-neutral-500">
             {subTitle}
           </p>
         </div>

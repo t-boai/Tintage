@@ -14,7 +14,7 @@ export default function BreadCrumbs({ items }: BreadCrumbsProps) {
   if (!items || items.length === 0) return null;
 
   return (
-    <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs font-bold tracking-wider text-neutral-500">
+    <nav className="mb-5 flex flex-wrap items-center gap-2 text-xs font-bold tracking-wider text-neutral-500">
       {items.map((item, idx) => {
         const isLast = idx === items.length - 1;
 
