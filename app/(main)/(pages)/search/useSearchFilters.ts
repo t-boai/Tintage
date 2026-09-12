@@ -129,6 +129,10 @@ export function useSearchFilters(filtersInfo?: FiltersInfoData | null) {
   const handleSingleFilterChange = React.useCallback(
     (key: string, value: string) => {
       const params = new URLSearchParams(Array.from(searchParams.entries()));
+      if (key === "category") {
+        params.delete("q");
+      }
+
       if (params.get(key) === value) params.delete(key);
       else params.set(key, value);
       updateUrl(params); // Single filter thì gọi liền, không delay

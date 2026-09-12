@@ -286,7 +286,7 @@ export default function FilterSidebar({ filtersInfo }: FilterSidebarProps) {
                 </span>
                 <input
                   type="text"
-                  placeholder="TỪ"
+                  placeholder="Từ"
                   value={minInput}
                   disabled={isMutating}
                   onChange={handleMinInputChange}
@@ -311,7 +311,7 @@ export default function FilterSidebar({ filtersInfo }: FilterSidebarProps) {
             <Button
               onClick={applyPriceFilter}
               disabled={isMutating}
-              className="mt-3 h-8 w-full bg-neutral-900 text-xs font-bold text-white hover:bg-(--primaryCus) disabled:cursor-not-allowed disabled:opacity-50"
+              className="mt-3 h-8 w-full cursor-pointer bg-(--primaryCus) text-xs font-bold text-white hover:bg-(--primaryHov) disabled:cursor-not-allowed disabled:opacity-50"
             >
               Áp dụng <ChevronRight size={14} className="ml-1" />
             </Button>
@@ -345,7 +345,7 @@ export default function FilterSidebar({ filtersInfo }: FilterSidebarProps) {
                               onClick={() =>
                                 handleFilterChange("sizes", sizeObj.value)
                               }
-                              className={`min-w-10 rounded-md border px-3 py-1.5 text-xs font-medium transition-all disabled:cursor-not-allowed disabled:opacity-70 ${
+                              className={`min-w-10 cursor-pointer rounded-md border px-3 py-1.5 text-xs font-medium transition-all hover:border-(--primaryCus)! hover:bg-(--primaryCus)/5 hover:text-(--primaryCus) disabled:cursor-not-allowed disabled:opacity-70 ${
                                 isSelected
                                   ? "border-(--primaryCus) bg-(--primaryCus)/5 text-(--primaryCus)"
                                   : "border-neutral-200 text-neutral-600 hover:border-neutral-400"
@@ -380,7 +380,7 @@ export default function FilterSidebar({ filtersInfo }: FilterSidebarProps) {
                         <TooltipTrigger
                           disabled={isMutating}
                           onClick={() => handleFilterChange("colors", color.id)}
-                          className={`relative flex h-7 w-7 items-center justify-center rounded-full border border-neutral-200 transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:hover:scale-100 ${
+                          className={`relative flex h-7 w-7 cursor-pointer items-center justify-center rounded-full border border-neutral-200 transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:hover:scale-100 ${
                             isSelected
                               ? "ring-2 ring-(--primaryCus) ring-offset-2"
                               : ""
