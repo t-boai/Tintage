@@ -68,6 +68,8 @@ export default function HeaderSearch() {
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
             disabled={isPending}
+            autoComplete="off"
+            name="tintage-search-fake-name"
             placeholder="Tìm kiếm áo thun, giày boot..."
             className="h-full border-none focus-visible:ring-0 focus-visible:outline-none disabled:bg-transparent"
           />
