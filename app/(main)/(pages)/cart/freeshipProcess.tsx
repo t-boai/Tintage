@@ -14,7 +14,7 @@ interface FreeshipProcessProps {
   threshold?: number;
 }
 
-const DEFAULT_FREESHIP_THRESHOLD = 5000000;
+const DEFAULT_FREESHIP_THRESHOLD = 800000;
 
 export default function FreeshipProcess({
   subtotal,

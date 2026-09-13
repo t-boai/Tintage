@@ -176,6 +176,27 @@ export function useCartPage() {
     [dispatch],
   );
 
+  const handleToggleShop = React.useCallback(
+    (shopItemIds: string[]) => {
+      const isShopAllSelected = shopItemIds.every((id) =>
+        selectedIds.includes(id),
+      );
+
+      if (isShopAllSelected) {
+        const newSelected = selectedIds.filter(
+          (id) => !shopItemIds.includes(id),
+        );
+        dispatch(selectAllItems(newSelected));
+      } else {
+        const newSelected = Array.from(
+          new Set([...selectedIds, ...shopItemIds]),
+        );
+        dispatch(selectAllItems(newSelected));
+      }
+    },
+    [selectedIds, dispatch],
+  );
+
   const handleUpdateQuantity = React.useCallback(
     (productId: string, newQuantity: number) => {
       if (newQuantity < 1) return;
@@ -338,6 +359,7 @@ export function useCartPage() {
     subtotal,
     handleToggleSelectAll,
     handleToggleSelectItem,
+    handleToggleShop,
     handleUpdateQuantity,
     handleRemoveItem,
     handleRemoveSelectedItems,

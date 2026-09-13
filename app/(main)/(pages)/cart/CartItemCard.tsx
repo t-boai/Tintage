@@ -3,14 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
-import {
-  CheckCircle2,
-  MessageCircle,
-  Minus,
-  Plus,
-  Trash2,
-  Truck,
-} from "lucide-react";
+import { ChevronDown, Minus, Plus, Trash2 } from "lucide-react";
 
 // shadcn
 import { Checkbox } from "@/components/ui/checkbox";
@@ -21,7 +14,6 @@ import { formatPrice } from "@/app/helper/format-price";
 
 // interfaces
 import { CartItem } from "@/app/interfaces/cart.interfaces";
-import { getExpectedDelivery } from "@/app/helper/expectedDelivery.helper";
 
 interface CartItemCardProps {
   item: CartItem;
@@ -47,11 +39,11 @@ function CartItemCardComponent({
 
   return (
     <div
-      className={`relative flex flex-col gap-4 rounded-2xl border bg-white p-4 transition-all sm:flex-row sm:items-start sm:p-5 ${
-        isSelected ? "border-(--primaryCus) shadow-2xs" : "border-neutral-200"
+      className={`relative flex flex-col gap-4 bg-white transition-all sm:flex-row sm:items-start ${
+        isSelected ? "bg-red-50/30" : ""
       } ${!isAvailable ? "opacity-60 grayscale-20" : ""}`}
     >
-      <div className="pt-2">
+      <div className="pt-2 sm:pt-4">
         <Checkbox
           checked={isSelected}
           onCheckedChange={() => onToggleSelect(productId)}
@@ -60,12 +52,12 @@ function CartItemCardComponent({
         />
       </div>
 
-      <div className="relative h-28 w-28 shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50 sm:h-32 sm:w-32">
+      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50 sm:h-28 sm:w-28">
         <Image
           src={product.image || "/placeholder-image.png"}
           alt={product.name || "Sản phẩm"}
           fill
-          sizes="(max-width: 640px) 112px, 128px"
+          sizes="(max-width: 640px) 96px, 112px"
           className="object-cover"
         />
         {!isAvailable && (
@@ -77,99 +69,83 @@ function CartItemCardComponent({
         )}
       </div>
 
-      <div className="flex flex-1 flex-col justify-between self-stretch">
+      <div className="flex flex-1 flex-col justify-between self-stretch py-1">
         <div>
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-xs text-neutral-500">
-              <span>Người bán:</span>
-              <span className="font-bold text-neutral-800 underline decoration-neutral-300">
-                {product.seller?.fullName || "Tintage Shop"}
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <span className="block font-mono text-[10px] font-black tracking-widest text-neutral-400 uppercase">
+                {product.brand || "VINTAGE"}
               </span>
-              {product.seller?.isVerifiedSeller && (
-                <CheckCircle2 size={12} className="text-(--primaryCus)" />
-              )}
+              <Link href={`/products/${product.slug || "#"}`}>
+                <h3
+                  className={`mt-0.5 line-clamp-2 text-sm leading-snug font-bold transition-colors hover:text-(--primaryCus) ${
+                    !isAvailable ? "text-neutral-500" : "text-neutral-900"
+                  }`}
+                >
+                  {product.name}
+                </h3>
+              </Link>
             </div>
 
-            <span
-              className={`text-base font-extrabold ${
-                !isAvailable
-                  ? "text-neutral-400 line-through"
-                  : "text-neutral-900"
-              }`}
-            >
-              {formatPrice(product.price)}
-            </span>
-          </div>
-
-          <span className="mt-1 block font-mono text-[10px] font-black tracking-widest text-neutral-400 uppercase">
-            {product.brand || "VINTAGE"}
-          </span>
-
-          <Link href={`/products/${product.slug || "#"}`}>
-            <h3
-              className={`mt-0.5 line-clamp-1 text-sm font-bold transition-colors hover:text-(--primaryCus) ${
-                !isAvailable ? "text-neutral-500" : "text-neutral-900"
-              }`}
-            >
-              {product.name}
-            </h3>
-          </Link>
-
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            {product.condition && (
-              <span className="rounded-md bg-neutral-100 px-2 py-0.5 text-[11px] font-medium text-neutral-600">
-                Tình trạng:{" "}
-                <strong className="text-neutral-900">
-                  {product.condition}
-                </strong>
-              </span>
-            )}
-            {product.isNew && (
-              <Badge
-                variant="secondary"
-                className="rounded-md border-none bg-red-50 text-[10px] font-bold text-(--primaryCus)"
+            <div className="text-right">
+              <span
+                className={`block text-base font-black ${
+                  !isAvailable
+                    ? "text-neutral-400 line-through"
+                    : "text-neutral-900"
+                }`}
               >
-                Hàng Mới
-              </Badge>
-            )}
+                {formatPrice(product.price)}
+              </span>
+              {product.originalPrice &&
+                product.originalPrice > product.price && (
+                  <span className="text-[10px] text-neutral-400 line-through">
+                    {formatPrice(product.originalPrice)}
+                  </span>
+                )}
+            </div>
           </div>
 
-          <div className="mt-2.5 flex items-center gap-1.5 text-[11px] font-medium text-neutral-500">
-            <Truck size={13} className="text-(--primaryCus)" />
-            <span>
-              Dự kiến nhận:{" "}
-              <strong className="text-neutral-700">
-                {getExpectedDelivery()}
-              </strong>
-            </span>
-          </div>
+          {isAvailable && (
+            <div className="mt-2 flex items-center gap-2">
+              <button className="group flex items-center gap-1 rounded-md bg-neutral-50 px-2 py-1 text-[11px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800">
+                {product.size || "FreeSize"}
+                <ChevronDown size={12} className="text-neutral-400" />
+              </button>
+
+              {product.condition && (
+                <span className="rounded-md border border-neutral-200 px-2 py-0.5 text-[10px] font-semibold text-neutral-600">
+                  {product.condition}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
-        <div className="mt-4 flex items-center justify-between border-t border-neutral-100 pt-3">
+        <div className="mt-4 flex items-end justify-between">
           {isAvailable ? (
             <div className="flex items-center gap-3">
-              <div className="flex items-center rounded-lg border border-neutral-200">
+              <div className="flex items-center rounded-lg border border-neutral-200 bg-white">
                 <button
                   type="button"
                   onClick={() => onUpdateQuantity(productId, quantity - 1)}
                   disabled={quantity <= 1}
-                  className="cursor-pointer p-1.5 text-neutral-500 transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="cursor-pointer p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-30"
                 >
-                  <Minus size={11} />
+                  <Minus size={12} />
                 </button>
-                <span className="w-7 text-center text-xs font-bold text-neutral-800">
+                <span className="w-8 text-center text-xs font-bold text-neutral-800">
                   {quantity}
                 </span>
                 <button
                   type="button"
                   onClick={() => onUpdateQuantity(productId, quantity + 1)}
                   disabled={isReachedMaxStock}
-                  className="cursor-pointer p-1.5 text-neutral-500 transition-colors hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="cursor-pointer p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-30"
                 >
-                  <Plus size={11} />
+                  <Plus size={12} />
                 </button>
               </div>
-
               <span className="text-[10px] font-medium text-neutral-400">
                 Kho: {stock}
               </span>
@@ -180,26 +156,13 @@ function CartItemCardComponent({
             </span>
           )}
 
-          <div className="flex items-center gap-3.5 text-xs font-semibold text-neutral-500">
-            <button
-              type="button"
-              onClick={() =>
-                alert(`Mở chat với ${product.seller?.fullName || "Shop"}`)
-              }
-              className="flex cursor-pointer items-center gap-1 text-(--primaryCus) hover:underline"
-            >
-              <MessageCircle size={13} />
-              <span className="hidden sm:inline">Chat với shop</span>
-            </button>
-            <span className="text-neutral-200">|</span>
-            <button
-              type="button"
-              onClick={() => onRemove(productId)}
-              className="cursor-pointer text-neutral-400 transition-colors hover:text-red-600"
-            >
-              <Trash2 size={13} />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => onRemove(productId)}
+            className="flex cursor-pointer items-center gap-1 text-[11px] font-semibold text-neutral-400 transition-colors hover:text-red-600"
+          >
+            <Trash2 size={14} /> <span className="hidden sm:inline">Xóa</span>
+          </button>
         </div>
       </div>
     </div>

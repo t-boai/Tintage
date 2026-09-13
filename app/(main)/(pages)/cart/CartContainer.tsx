@@ -1,6 +1,6 @@
 "use client";
 
-// Components
+import { useMemo } from "react";
 import OrderingProcess from "@/app/components/orderingProcess/OrderingProcess";
 import FreeshipProcess from "@/app/(main)/(pages)/cart/freeshipProcess";
 import SelectItems from "@/app/components/selectItems/SelectItems";
@@ -19,14 +19,27 @@ export default function CartContainer() {
     subtotal,
     handleToggleSelectAll,
     handleToggleSelectItem,
+    handleToggleShop,
     handleUpdateQuantity,
     handleRemoveItem,
     handleRemoveSelectedItems,
     handleClearUnavailableItems,
   } = useCartPage();
 
+  const selectedShopCount = useMemo(() => {
+    const selectedAvailableItems = availableItems.filter(
+      (item) => item.product && selectedIds.includes(item.product.id),
+    );
+    const shopIds = new Set(
+      selectedAvailableItems.map(
+        (item) => item.product!.seller?.slug || "tintage",
+      ),
+    );
+    return shopIds.size;
+  }, [availableItems, selectedIds]);
+
   return (
-    <div className="min-h-screen py-6 text-neutral-800">
+    <div className="min-h-screen bg-[#FAFAFA] py-6 text-neutral-800">
       <div className="container mx-auto">
         <OrderingProcess currentStep={1} />
 
@@ -63,6 +76,7 @@ export default function CartContainer() {
                 items={items}
                 selectedIds={selectedIds}
                 onToggleSelectItem={handleToggleSelectItem}
+                onToggleShop={handleToggleShop}
                 onUpdateQuantity={handleUpdateQuantity}
                 onRemoveItem={handleRemoveItem}
                 onClearUnavailable={handleClearUnavailableItems}
@@ -72,6 +86,7 @@ export default function CartContainer() {
             <div className="lg:col-span-4">
               <CartSummary
                 selectedCount={selectedIds.length}
+                selectedShopCount={selectedShopCount}
                 subtotal={subtotal}
               />
             </div>
