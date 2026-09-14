@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import debounce from "lodash/debounce";
+import { useRouter } from "next/navigation";
 
 // redux
 import { useAppDispatch, useAppSelector } from "@/app/redux/hook";
@@ -22,13 +23,16 @@ import { CartItem } from "@/app/interfaces/cart.interfaces";
 
 // shad
 import { toast } from "@/components/ui/toast";
+import { checkoutService } from "@/app/services/checkoutServices";
 
 export function useCartPage() {
+  const router = useRouter();
   const dispatch = useAppDispatch();
   const { selectedIds } = useAppSelector((state) => state.cart);
 
   const [items, setItems] = React.useState<CartItem[]>([]);
   const [isLoading, setIsLoading] = React.useState<boolean>(true);
+  const [isCheckingOut, setIsCheckingOut] = React.useState<boolean>(false);
 
   const [reloadTrigger, setReloadTrigger] = React.useState(0);
 
@@ -349,9 +353,67 @@ export function useCartPage() {
     }
   }, [unavailableItems, fetchCartData]);
 
+  // api thanh toán
+  const handleCheckout = React.useCallback(async () => {
+    // 1. Chỉ lấy những item khả dụng và đã được tick chọn
+    const checkoutItems = availableItems
+      .filter((item) => item.product && selectedIds.includes(item.product.id))
+      .map((item) => ({
+        productId: item.product!.id,
+        quantity: item.quantity,
+      }));
+
+    if (checkoutItems.length === 0) {
+      toast.add({
+        type: "warning",
+        description: "Vui lòng chọn ít nhất 1 sản phẩm để thanh toán.",
+      });
+      return;
+    }
+
+    setIsCheckingOut(true);
+    try {
+      // 2. Gọi API khởi tạo phiên thanh toán (Nhớ import và khai báo hàm này trong cartService nhé)
+      const res = await checkoutService.initCheckoutSession(checkoutItems);
+
+      // 3. Ép kiểu an toàn để lấy data trả về
+      const data = res?.data as
+        { checkoutToken?: string; warning?: string } | undefined;
+
+      if (data?.checkoutToken) {
+        // Nếu API có cảnh báo tự động ép số lượng do kho giảm -> Báo cho user biết
+        if (data.warning) {
+          toast.add({ type: "warning", description: data.warning });
+        }
+
+        // 4. Đẩy user sang trang Checkout kèm theo Token
+        router.push(`/checkout?token=${data.checkoutToken}`);
+      } else {
+        throw new Error("Không nhận được mã xác thực thanh toán từ Server.");
+      }
+    } catch (error) {
+      // Ép kiểu chuẩn Strict Mode để bắt thông báo lỗi từ Axios
+      const err = error as {
+        response?: { data?: { message?: string } };
+        message?: string;
+      };
+      console.error("Lỗi khởi tạo Checkout:", err);
+      toast.add({
+        type: "error",
+        description:
+          err?.response?.data?.message ||
+          err?.message ||
+          "Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.",
+      });
+    } finally {
+      setIsCheckingOut(false);
+    }
+  }, [availableItems, selectedIds, router]);
+
   return {
     items,
     isLoading,
+    isCheckingOut,
     availableItems,
     unavailableItems,
     selectedIds,
@@ -364,6 +426,7 @@ export function useCartPage() {
     handleRemoveItem,
     handleRemoveSelectedItems,
     handleClearUnavailableItems,
+    handleCheckout,
     fetchCartData,
   };
 }

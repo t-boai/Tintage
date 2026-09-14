@@ -16,6 +16,7 @@ export default function CartContainer() {
     availableItems,
     selectedIds,
     isAllSelected,
+    isCheckingOut,
     subtotal,
     handleToggleSelectAll,
     handleToggleSelectItem,
@@ -24,6 +25,7 @@ export default function CartContainer() {
     handleRemoveItem,
     handleRemoveSelectedItems,
     handleClearUnavailableItems,
+    handleCheckout,
   } = useCartPage();
 
   const selectedShopCount = useMemo(() => {
@@ -88,6 +90,8 @@ export default function CartContainer() {
                 selectedCount={selectedIds.length}
                 selectedShopCount={selectedShopCount}
                 subtotal={subtotal}
+                onCheckout={handleCheckout}
+                isCheckingOut={isCheckingOut}
               />
             </div>
           </div>
