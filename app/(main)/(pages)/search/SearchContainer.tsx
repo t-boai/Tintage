@@ -93,7 +93,7 @@ export default function SearchContainer({
       const err = error as Error;
 
       if (err.name === "AbortError" || err.message?.includes("canceled")) {
-        console.log("⚡ [FE] Đã hủy Request cũ để ưu tiên Request mới!");
+        console.log("Đã hủy Request cũ để ưu tiên Request mới!");
         return;
       }
 

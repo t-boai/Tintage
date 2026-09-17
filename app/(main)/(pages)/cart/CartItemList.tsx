@@ -59,7 +59,6 @@ export default function CartItemList({
 
         const sellerObj = item.product.seller;
 
-        console.log(sellerObj);
         const sellerKey =
           sellerObj?.slug || sellerObj?.fullName || "tintage-official";
 
