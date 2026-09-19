@@ -1,7 +1,8 @@
 // services/authService.ts
 
 // interface
-import { AuthResponse } from "@/app/interfaces/user.interfaces";
+import { ApiRes } from "@/app/interfaces/apiRes.interfaces";
+import { AddressData, AuthResponse } from "@/app/interfaces/user.interfaces";
 
 // validates
 import {
@@ -43,6 +44,20 @@ export const authService = {
         localStorage.removeItem("accessToken");
         sessionStorage.clear();
       }
+    }
+  },
+
+  addAddress: async (data: AddressData): Promise<ApiRes<AddressData>> => {
+    try {
+      const res = await http.post<ApiRes<AddressData>>(
+        "/user/addAddress",
+        data,
+      );
+      return res;
+    } catch (error) {
+      const err = error as Error;
+      console.error("Lỗi khi thêm địa chỉ:", err);
+      throw err;
     }
   },
 };
