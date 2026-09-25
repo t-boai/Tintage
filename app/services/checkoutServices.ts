@@ -45,6 +45,17 @@ export interface UpdateShippingPayload {
   shippingMethods?: Record<string, string>;
 }
 
+export interface PlaceOrderPayload {
+  paymentMethod: string;
+  notes?: Record<string, string>;
+}
+
+export interface PlaceOrderResponseData {
+  orderCode: string;
+  nextAction: "REDIRECT_THANK_YOU" | "REDIRECT_PAYMENT_GATEWAY";
+  paymentUrl?: string;
+}
+
 export const checkoutService = {
   initCheckoutSession: async (
     items: { productId: string; quantity: number }[],
@@ -75,6 +86,16 @@ export const checkoutService = {
   ): Promise<ApiRes<CheckoutSessionBE>> => {
     return await http.patch<ApiRes<CheckoutSessionBE>>(
       `/checkout/session/${token}/shipping`,
+      payload,
+    );
+  },
+
+  placeOrder: async (
+    token: string,
+    payload: PlaceOrderPayload,
+  ): Promise<ApiRes<PlaceOrderResponseData>> => {
+    return await http.post<ApiRes<PlaceOrderResponseData>>(
+      `/checkout/place-order/${token}`,
       payload,
     );
   },
