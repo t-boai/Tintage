@@ -12,6 +12,8 @@ import {
   ChevronLeft,
   CheckCircle2,
 } from "lucide-react";
+
+// shad
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -31,6 +33,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+
+// interfaces
 import { AddressData } from "@/app/interfaces/user.interfaces";
 
 interface AddressSectionProps {
@@ -45,10 +49,17 @@ interface MapPickerProps {
   position: [number, number];
   setPosition: (lat: number, lng: number) => void;
 }
+
 interface VNLocation {
   id: string;
   name: string;
 }
+
+interface VNLocationResponse {
+  error: number;
+  data: VNLocation[];
+}
+
 interface NominatimAddress {
   road?: string;
   name?: string;
@@ -56,7 +67,16 @@ interface NominatimAddress {
   city?: string;
 }
 
-const getApproximateStreetName = (rawAddress: string) => {
+interface NominatimGeocodeRes {
+  lat: string;
+  lon: string;
+}
+
+interface NominatimReverseRes {
+  address?: NominatimAddress;
+}
+
+const getApproximateStreetName = (rawAddress: string): string => {
   if (!rawAddress) return "";
   return rawAddress
     .replace(/^(số|hẻm|ngõ|ngách)\s+/i, "")
@@ -77,7 +97,7 @@ const MapPicker = dynamic<MapPickerProps>(
   },
 );
 
-export default function AddressSection({
+export default React.memo(function AddressSection({
   activeAddress,
   addressBook,
   isSaving,
@@ -122,13 +142,13 @@ export default function AddressSection({
   React.useEffect(() => {
     fetch("https://esgoo.net/api-tinhthanh/1/0.htm")
       .then((res) => res.json())
-      .then((data: { error: number; data: VNLocation[] }) => {
+      .then((data: VNLocationResponse) => {
         if (data.error === 0) setProvinces(data.data);
       })
-      .catch((err: unknown) => console.error("Lỗi fetch Tỉnh:", err));
+      .catch((err: Error) => console.error("Lỗi fetch Tỉnh:", err.message));
   }, []);
 
-  const handleProvinceChange = (pId: string | null) => {
+  const handleProvinceChange = React.useCallback((pId: string | null) => {
     if (!pId) return;
     setSelectedProvinceId(pId);
     setSelectedDistrictId("");
@@ -137,22 +157,22 @@ export default function AddressSection({
     setWards([]);
     fetch(`https://esgoo.net/api-tinhthanh/2/${pId}.htm`)
       .then((res) => res.json())
-      .then((data: { error: number; data: VNLocation[] }) => {
+      .then((data: VNLocationResponse) => {
         if (data.error === 0) setDistricts(data.data);
       });
-  };
+  }, []);
 
-  const handleDistrictChange = (dId: string | null) => {
+  const handleDistrictChange = React.useCallback((dId: string | null) => {
     if (!dId) return;
     setSelectedDistrictId(dId);
     setSelectedWardId("");
     setWards([]);
     fetch(`https://esgoo.net/api-tinhthanh/3/${dId}.htm`)
       .then((res) => res.json())
-      .then((data: { error: number; data: VNLocation[] }) => {
+      .then((data: VNLocationResponse) => {
         if (data.error === 0) setWards(data.data);
       });
-  };
+  }, []);
 
   React.useEffect(() => {
     if (
@@ -181,23 +201,27 @@ export default function AddressSection({
       setIsPingingMap(true);
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchString)}&limit=1&email=admin@tintage.vn`,
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            searchString,
+          )}&limit=1&email=contact@tintage.vn`,
           { headers: { "Accept-Language": "vi-VN,vi;q=0.9" } },
         );
-        const data = (await res.json()) as { lat: string; lon: string }[];
+        const data = (await res.json()) as NominatimGeocodeRes[];
+
         if (data && data.length > 0) {
           setPosition([parseFloat(data[0].lat), parseFloat(data[0].lon)]);
           lastGeocodedWard.current = searchString;
         } else if (street) {
           const fallbackString = `${wardName}, ${districtName}, ${provinceName}, Việt Nam`;
           const fallbackRes = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(fallbackString)}&limit=1&email=admin@tintage.vn`,
+            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+              fallbackString,
+            )}&limit=1&email=contact@tintage.vn`,
             { headers: { "Accept-Language": "vi-VN,vi;q=0.9" } },
           );
-          const fallbackData = (await fallbackRes.json()) as {
-            lat: string;
-            lon: string;
-          }[];
+          const fallbackData =
+            (await fallbackRes.json()) as NominatimGeocodeRes[];
+
           if (fallbackData && fallbackData.length > 0) {
             setPosition([
               parseFloat(fallbackData[0].lat),
@@ -207,7 +231,8 @@ export default function AddressSection({
           }
         }
       } catch (error: unknown) {
-        console.error("Lỗi bay theo địa chỉ:", error);
+        if (error instanceof Error)
+          console.error("Lỗi Nominatim:", error.message);
       } finally {
         setIsPingingMap(false);
       }
@@ -226,16 +251,19 @@ export default function AddressSection({
     wards,
   ]);
 
-  const handleMapDragEnd = (lat: number, lng: number) => {
+  // tìm địa chỉ từ tọa độ kéo thả
+  const handleMapDragEnd = React.useCallback((lat: number, lng: number) => {
     setPosition([lat, lng]);
     if (dragTimeoutRef.current) clearTimeout(dragTimeoutRef.current);
+
     dragTimeoutRef.current = setTimeout(async () => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&email=admin@tintage.vn`,
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&addressdetails=1&email=contact@tintage.vn`,
           { headers: { "Accept-Language": "vi-VN,vi;q=0.9" } },
         );
-        const data = (await res.json()) as { address?: NominatimAddress };
+        const data = (await res.json()) as NominatimReverseRes;
+
         if (data && data.address) {
           const suggestedRoad = data.address.road || data.address.name || "";
           if (suggestedRoad) {
@@ -246,12 +274,13 @@ export default function AddressSection({
           }
         }
       } catch (error: unknown) {
-        console.error("Lỗi reverse geocoding:", error);
+        if (error instanceof Error)
+          console.error("Lỗi Reverse Nominatim:", error.message);
       }
     }, 1000);
-  };
+  }, []);
 
-  const submitNewAddress = () => {
+  const submitNewAddress = React.useCallback(() => {
     if (!isFormValid) return;
 
     const provinceName =
@@ -260,8 +289,7 @@ export default function AddressSection({
       districts.find((d) => d.id === selectedDistrictId)?.name || "";
     const wardName = wards.find((w) => w.id === selectedWardId)?.name || "";
 
-    // Chuỗi hiển thị (Chỉ dùng cho UI Frontend)
-    const completeAddress = `${streetAddress}, ${wardName}, ${districtName}, ${provinceName}`;
+    const completeAddress = `${streetAddress.trim()}, ${wardName}, ${districtName}, ${provinceName}`;
 
     onAddNewAddress({
       fullName: fullName.trim(),
@@ -275,7 +303,6 @@ export default function AddressSection({
       lng: position[1],
     });
 
-    // Reset data
     setFullName("");
     setPhone("");
     setStreetAddress("");
@@ -283,13 +310,25 @@ export default function AddressSection({
     setSelectedDistrictId("");
     setSelectedWardId("");
     setIsAddressModalOpen(false);
-  };
+  }, [
+    isFormValid,
+    fullName,
+    phone,
+    streetAddress,
+    position,
+    onAddNewAddress,
+    provinces,
+    selectedProvinceId,
+    districts,
+    selectedDistrictId,
+    wards,
+    selectedWardId,
+  ]);
 
   return (
     <Dialog
       open={isAddressModalOpen}
       onOpenChange={(open) => {
-        // Chặn đóng Modal nếu đang gửi API
         if (isSaving) return;
         setIsAddressModalOpen(open);
         if (open) {
@@ -486,7 +525,7 @@ export default function AddressSection({
                 <div className="flex-1 space-y-8 overflow-y-auto px-6 py-8 md:px-10">
                   <div className="space-y-4">
                     <h3 className="border-b border-neutral-100 pb-2 text-sm font-black tracking-wider text-neutral-900 uppercase">
-                      1. Thông tin liên hệ
+                      1. Thông liên hệ
                     </h3>
                     <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
                       <Input
@@ -639,4 +678,4 @@ export default function AddressSection({
       </DialogContent>
     </Dialog>
   );
-}
+});

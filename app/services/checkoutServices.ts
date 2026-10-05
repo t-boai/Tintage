@@ -1,49 +1,11 @@
 import { ApiRes } from "@/app/interfaces/apiRes.interfaces";
+import {
+  CheckoutSessionBE,
+  UpdateShippingPayload,
+} from "@/app/interfaces/checkout.interfaces";
 import { http } from "@/lib/httpClient";
 
-export interface SubOrderItemBE {
-  productId: string;
-  name: string;
-  slug: string;
-  image: string;
-  price: number;
-  quantity: number;
-  itemTotal: number;
-}
-
-export interface SellerInfoBE {
-  id: string;
-  fullName: string;
-  avatar: string;
-}
-
-export interface CheckoutSubOrderBE {
-  sellerInfo: SellerInfoBE;
-  items: SubOrderItemBE[];
-  shopSubTotal: number;
-  shippingFee: number;
-  shippingMethod: string | null;
-}
-
-export interface CheckoutFinancialsBE {
-  cartSubTotal: number;
-  totalShippingFee: number;
-  voucherDiscount: number;
-  totalShippingDiscount: number;
-  grandTotal: number;
-}
-
-export interface CheckoutSessionBE {
-  subOrders: CheckoutSubOrderBE[];
-  financials: CheckoutFinancialsBE;
-  shippingAddress: unknown | null;
-  expiresIn: number;
-}
-
-export interface UpdateShippingPayload {
-  addressId: string;
-  shippingMethods?: Record<string, string>;
-}
+type HttpOptions = Parameters<typeof http.patch>[2];
 
 export const checkoutService = {
   initCheckoutSession: async (
@@ -72,10 +34,12 @@ export const checkoutService = {
   updateShipping: async (
     token: string,
     payload: UpdateShippingPayload,
+    options?: HttpOptions,
   ): Promise<ApiRes<CheckoutSessionBE>> => {
     return await http.patch<ApiRes<CheckoutSessionBE>>(
       `/checkout/session/${token}/shipping`,
       payload,
+      options,
     );
   },
 };

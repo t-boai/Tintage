@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import {
   Lock,
   Loader2,
@@ -9,6 +10,8 @@ import {
   ChevronRight,
   Ticket,
 } from "lucide-react";
+
+// shad
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,7 +34,7 @@ interface OrderSummarySectionProps {
   systemVoucher?: string | null;
 }
 
-export default function OrderSummarySection({
+export default React.memo(function OrderSummarySection({
   totalItems,
   totalItemsPrice,
   totalShippingFee,
@@ -202,4 +205,4 @@ export default function OrderSummarySection({
       </div>
     </div>
   );
-}
+});

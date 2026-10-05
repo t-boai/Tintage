@@ -12,6 +12,8 @@ import {
   Info,
   Sparkles,
 } from "lucide-react";
+
+// shad
 import {
   Dialog,
   DialogContent,
@@ -76,7 +78,6 @@ const ShopOrderBlock = React.memo(
   }: ShopOrderBlockProps) => {
     const currentAmount = shop.shopSubTotal || 0;
     const actualDiscount = shop.shippingDiscount || 0;
-
     const currentOption = shop.availableShippingOptions?.find(
       (o) => o.id === selectedShippingId,
     );
@@ -89,7 +90,6 @@ const ShopOrderBlock = React.memo(
     if (currentAmount >= 1000000) {
       bannerColor = "bg-emerald-50 border-emerald-200 text-emerald-700";
       bannerIcon = <Sparkles size={16} className="shrink-0 text-emerald-500" />;
-
       if (isCurrentlyFree) {
         bannerText = (
           <span>
@@ -163,7 +163,7 @@ const ShopOrderBlock = React.memo(
         </div>
 
         <div className="mb-6 space-y-4">
-          {shop.items.map((item) => (
+          {shop.items.map((item, index) => (
             <div key={item.id} className="flex items-start gap-4">
               <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-neutral-200 bg-neutral-50">
                 <Image
@@ -172,6 +172,7 @@ const ShopOrderBlock = React.memo(
                   fill
                   className="object-cover"
                   sizes="64px"
+                  priority={index === 0}
                 />
                 <div className="absolute -right-1 -bottom-1 rounded-tl-lg bg-neutral-900 px-1.5 py-0.5 text-[9px] font-bold text-white">
                   x{item.quantity || 1}
@@ -242,7 +243,6 @@ const ShopOrderBlock = React.memo(
 
               const isSelected = selectedShippingId === optionData.id;
               const hasDiscount = optionData.discount > 0;
-
               const descText =
                 optionData.desc || "Đang tính toán thời gian giao hàng...";
 
@@ -250,11 +250,7 @@ const ShopOrderBlock = React.memo(
                 <div
                   key={optionData.id}
                   onClick={() => onSelectShipping(shop.shopId, optionData.id)}
-                  className={`cursor-pointer rounded-xl border p-3 transition-all ${
-                    isSelected
-                      ? "border-(--primaryCus) bg-red-50/50 shadow-sm"
-                      : "border-neutral-200 bg-white hover:border-red-200"
-                  }`}
+                  className={`cursor-pointer rounded-xl border p-3 transition-all ${isSelected ? "border-(--primaryCus) bg-red-50/50 shadow-sm" : "border-neutral-200 bg-white hover:border-red-200"}`}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm font-bold text-neutral-900">
@@ -281,7 +277,6 @@ const ShopOrderBlock = React.memo(
                       </span>
                     </div>
                   </div>
-
                   <p className="mt-1.5 pl-6 text-[11px] leading-snug text-neutral-500">
                     {descText}
                   </p>
@@ -335,7 +330,7 @@ const ShopOrderBlock = React.memo(
 );
 ShopOrderBlock.displayName = "ShopOrderBlock";
 
-export default function OrderShippingSection({
+export default React.memo(function OrderShippingSection({
   subOrders,
   shippingMethods,
   onSelectShipping,
@@ -364,4 +359,4 @@ export default function OrderShippingSection({
       </div>
     </div>
   );
-}
+});
