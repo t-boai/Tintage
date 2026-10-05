@@ -30,6 +30,7 @@ export function useCheckout(checkoutToken: string) {
   const router = useRouter();
   const dispatch = useAppDispatch();
 
+  // Khóa Idempotency chống đúp đơn hàng
   const [idempotencyKey] = React.useState(() => crypto.randomUUID());
 
   const { user } = useAppSelector((state) => state.auth);
@@ -37,6 +38,11 @@ export function useCheckout(checkoutToken: string) {
     () => user?.address || [],
     [user?.address],
   );
+
+  // Prefetch trang Thank You
+  React.useEffect(() => {
+    router.prefetch("/thank-you");
+  }, [router]);
 
   const [manualAddressId, setManualAddressId] = React.useState<string | null>(
     null,
@@ -231,6 +237,7 @@ export function useCheckout(checkoutToken: string) {
 
   React.useEffect(() => {
     let isMounted = true;
+
     const isFakeId =
       activeAddressId && activeAddressId.toString().startsWith("addr_");
 
@@ -254,8 +261,9 @@ export function useCheckout(checkoutToken: string) {
         paymentMethod: paymentMethod.toUpperCase(),
         notes: {},
       };
+
       const response = await orderService.placeOrder(checkoutToken, payload, {
-        headers: { "Idempotency-Key": idempotencyKey },
+        headers: { "x-idempotency-key": idempotencyKey },
       });
 
       if (response && response.data) {
@@ -340,6 +348,7 @@ export function useCheckout(checkoutToken: string) {
             isDefault?: boolean;
             fullAddress?: string;
           };
+
           const newAddrId = responseData.id || `addr_${Date.now()}`;
 
           const newAddressFromServer: ExtendedAddressData = {
