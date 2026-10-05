@@ -1,13 +1,20 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
+
+// com
 import OrderingProcess from "@/app/components/orderingProcess/OrderingProcess";
 import FreeshipProcess from "@/app/(main)/(pages)/cart/freeshipProcess";
+import CartPageSkeleton from "@/app/components/skeleton/CartPageSkeleton";
 import SelectItems from "@/app/components/selectItems/SelectItems";
-import { useCartPage } from "@/app/(main)/(pages)/cart/useCartPage";
+
+// page & hooks
 import CartItemList from "@/app/(main)/(pages)/cart/CartItemList";
 import CartSummary from "@/app/(main)/(pages)/cart/CartSummary";
-import CartPageSkeleton from "@/app/components/skeleton/CartPageSkeleton";
+import { useCartPage } from "@/app/(main)/(pages)/cart/useCartPage";
+
+// Service
+import { orderService } from "@/app/services/orderService";
 
 export default function CartContainer() {
   const {
@@ -28,6 +35,26 @@ export default function CartContainer() {
     handleCheckout,
   } = useCartPage();
 
+  const [pendingOrderCode, setPendingOrderCode] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchPendingOrder = async () => {
+      try {
+        const res = await orderService.getLatestPendingOrder();
+        if (isMounted && res?.data?.orderCode) {
+          setPendingOrderCode(res.data.orderCode);
+        }
+      } catch (error) {
+        console.error("Lỗi khi tìm đơn hàng đang treo:", error);
+      }
+    };
+    fetchPendingOrder();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const selectedShopCount = useMemo(() => {
     const selectedAvailableItems = availableItems.filter(
       (item) => item.product && selectedIds.includes(item.product.id),
@@ -42,7 +69,7 @@ export default function CartContainer() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] py-6 text-neutral-800">
-      <div className="container mx-auto">
+      <div className="container mx-auto max-w-7xl px-4 md:px-8">
         <OrderingProcess currentStep={1} />
 
         <div className="mt-8 mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -82,6 +109,7 @@ export default function CartContainer() {
                 onUpdateQuantity={handleUpdateQuantity}
                 onRemoveItem={handleRemoveItem}
                 onClearUnavailable={handleClearUnavailableItems}
+                pendingOrderCode={pendingOrderCode}
               />
             </div>
 

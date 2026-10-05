@@ -1,18 +1,15 @@
 "use client";
 
-import * as React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, Minus, Plus, Trash2 } from "lucide-react";
 
-// shadcn
+// shad
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 
-// helpers
+// helpers & interfaces
 import { formatPrice } from "@/app/helper/format-price";
-
-// interfaces
 import { CartItem } from "@/app/interfaces/cart.interfaces";
 
 interface CartItemCardProps {
@@ -21,14 +18,18 @@ interface CartItemCardProps {
   onToggleSelect: (id: string) => void;
   onUpdateQuantity: (id: string, newQty: number) => void;
   onRemove: (id: string) => void;
+  isPendingReserve?: boolean;
+  timeLeft?: number;
 }
 
-function CartItemCardComponent({
+export default function CartItemCardComponent({
   item,
   isSelected,
   onToggleSelect,
   onUpdateQuantity,
   onRemove,
+  isPendingReserve = false,
+  timeLeft = 0,
 }: CartItemCardProps) {
   const { product, quantity, isAvailable } = item;
   if (!product) return null;
@@ -37,11 +38,17 @@ function CartItemCardComponent({
   const stock = product.stock ?? 0;
   const isReachedMaxStock = quantity >= stock;
 
+  const formatTime = (seconds: number) => {
+    const m = Math.floor(seconds / 60)
+      .toString()
+      .padStart(2, "0");
+    const s = (seconds % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
   return (
     <div
-      className={`relative flex flex-col gap-4 bg-white transition-all sm:flex-row sm:items-start ${
-        isSelected ? "bg-red-50/30" : ""
-      } ${!isAvailable ? "opacity-60 grayscale-20" : ""}`}
+      className={`relative flex flex-col gap-4 bg-white transition-all sm:flex-row sm:items-start ${isSelected ? "bg-red-50/30" : ""} ${!isAvailable && !isPendingReserve ? "opacity-60 grayscale-20" : ""}`}
     >
       <div className="pt-2 sm:pt-4">
         <Checkbox
@@ -62,8 +69,12 @@ function CartItemCardComponent({
         />
         {!isAvailable && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
-            <Badge className="bg-black/90 px-2 py-0.5 text-center text-[10px] leading-tight text-white hover:bg-black/90">
-              {item.reason?.toUpperCase() || "HẾT HÀNG"}
+            <Badge
+              className={`px-2 py-0.5 text-center text-[10px] leading-tight text-white ${isPendingReserve ? "bg-orange-500 shadow-md hover:bg-orange-500" : "bg-black/90 hover:bg-black/90"}`}
+            >
+              {isPendingReserve
+                ? "ĐANG GIỮ CHỖ"
+                : item.reason?.toUpperCase() || "ĐÃ BÁN HẾT"}
             </Badge>
           </div>
         )}
@@ -78,9 +89,7 @@ function CartItemCardComponent({
               </span>
               <Link href={`/products/${product.slug || "#"}`}>
                 <h3
-                  className={`mt-0.5 line-clamp-2 text-sm leading-snug font-bold transition-colors hover:text-(--primaryCus) ${
-                    !isAvailable ? "text-neutral-500" : "text-neutral-900"
-                  }`}
+                  className={`mt-0.5 line-clamp-2 text-sm leading-snug font-bold transition-colors hover:text-(--primaryCus) ${!isAvailable ? (isPendingReserve ? "text-orange-700" : "text-neutral-500") : "text-neutral-900"}`}
                 >
                   {product.name}
                 </h3>
@@ -89,11 +98,7 @@ function CartItemCardComponent({
 
             <div className="text-right">
               <span
-                className={`block text-base font-black ${
-                  !isAvailable
-                    ? "text-neutral-400 line-through"
-                    : "text-neutral-900"
-                }`}
+                className={`block text-base font-black ${!isAvailable && !isPendingReserve ? "text-neutral-400 line-through" : "text-neutral-900"}`}
               >
                 {formatPrice(product.price)}
               </span>
@@ -109,10 +114,9 @@ function CartItemCardComponent({
           {isAvailable && (
             <div className="mt-2 flex items-center gap-2">
               <button className="group flex items-center gap-1 rounded-md bg-neutral-50 px-2 py-1 text-[11px] font-medium text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-800">
-                {product.size || "FreeSize"}
+                {product.size || "FreeSize"}{" "}
                 <ChevronDown size={12} className="text-neutral-400" />
               </button>
-
               {product.condition && (
                 <span className="rounded-md border border-neutral-200 px-2 py-0.5 text-[10px] font-semibold text-neutral-600">
                   {product.condition}
@@ -130,7 +134,7 @@ function CartItemCardComponent({
                   type="button"
                   onClick={() => onUpdateQuantity(productId, quantity - 1)}
                   disabled={quantity <= 1}
-                  className="cursor-pointer p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="cursor-pointer p-1.5 text-neutral-500 hover:bg-neutral-100 disabled:opacity-30"
                 >
                   <Minus size={12} />
                 </button>
@@ -141,7 +145,7 @@ function CartItemCardComponent({
                   type="button"
                   onClick={() => onUpdateQuantity(productId, quantity + 1)}
                   disabled={isReachedMaxStock}
-                  className="cursor-pointer p-1.5 text-neutral-500 transition-colors hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-30"
+                  className="cursor-pointer p-1.5 text-neutral-500 hover:bg-neutral-100 disabled:opacity-30"
                 >
                   <Plus size={12} />
                 </button>
@@ -151,15 +155,19 @@ function CartItemCardComponent({
               </span>
             </div>
           ) : (
-            <span className="text-xs font-semibold text-red-500">
-              {item.reason || "Sản phẩm hiện không khả dụng"}
+            <span
+              className={`text-xs font-bold ${isPendingReserve ? "text-orange-600" : "text-red-500"}`}
+            >
+              {isPendingReserve
+                ? `Còn lại: ${formatTime(timeLeft)}`
+                : item.reason || "Sản phẩm hiện không khả dụng"}
             </span>
           )}
 
           <button
             type="button"
             onClick={() => onRemove(productId)}
-            className="flex cursor-pointer items-center gap-1 text-[11px] font-semibold text-neutral-400 transition-colors hover:text-red-600"
+            className="flex cursor-pointer items-center gap-1 text-[11px] font-semibold text-neutral-400 hover:text-red-600"
           >
             <Trash2 size={14} /> <span className="hidden sm:inline">Xóa</span>
           </button>
@@ -168,5 +176,3 @@ function CartItemCardComponent({
     </div>
   );
 }
-
-export default React.memo(CartItemCardComponent);

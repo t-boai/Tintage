@@ -3,10 +3,8 @@ import { revalidateTag } from "next/cache";
 
 export async function POST(request: NextRequest) {
   try {
-    // Lấy token từ Headers mà Backend gửi sang
     const secret = request.headers.get("x-revalidate-secret");
 
-    // Kiểm tra bảo mật
     if (secret !== process.env.REVALIDATE_SECRET_TOKEN) {
       return NextResponse.json(
         { message: "Invalid secret token" },
@@ -14,27 +12,29 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Đọc dữ liệu body
     const body = await request.json();
-    const tag = body.tag;
 
-    if (!tag) {
+    const tags = body.tags || (body.tag ? [body.tag] : []);
+
+    if (tags.length === 0) {
       return NextResponse.json(
-        { message: "Missing tag in body" },
+        { message: "Missing tags in body" },
         { status: 400 },
       );
     }
 
-    // Kích hoạt phá Cache
-    revalidateTag(tag, "default");
+    for (const tagToClear of tags) {
+      revalidateTag(tagToClear, "default");
+      console.log(`Next.js Revalidate: Đã xóa cache: ${tagToClear}`);
+    }
 
     return NextResponse.json({
       revalidated: true,
-      tag: tag,
+      tags: tags,
       now: Date.now(),
     });
   } catch (error) {
-    console.error("[FE Revalidate Error]", error);
+    console.error("FE Revalidate Error: ", error);
     return NextResponse.json(
       { message: "Error revalidating" },
       { status: 500 },
