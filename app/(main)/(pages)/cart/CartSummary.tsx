@@ -116,45 +116,11 @@ export default function CartSummary({
           <div className="flex items-start justify-between">
             <div className="flex flex-col gap-1">
               <div className="flex items-center gap-1">
-                <span>Phí vận chuyển dự kiến</span>
-                <Tooltip>
-                  <TooltipTrigger className="flex cursor-pointer items-center justify-center text-neutral-400">
-                    <Info size={12} />
-                  </TooltipTrigger>
-                  <TooltipContent className="border-none bg-neutral-900 text-white shadow-xl">
-                    <p>
-                      Phí vận chuyển cơ bản là {formatPrice(defaultShippingFee)}
-                      /Shop.
-                    </p>
-                    <p className="mt-1">
-                      Miễn phí cho tổng đơn trên{" "}
-                      {formatPrice(freeshipThreshold)}
-                    </p>
-                  </TooltipContent>
-                </Tooltip>
+                <span>Phí vận chuyển</span>
               </div>
-              {selectedShopCount > 1 && subtotal > 0 && (
-                <span className="text-[10px] text-neutral-400 italic">
-                  (Mua từ {selectedShopCount} Shop khác nhau)
-                </span>
-              )}
             </div>
 
-            <span
-              className={`font-bold ${
-                subtotal === 0
-                  ? "text-neutral-900"
-                  : shippingFee === 0
-                    ? "text-emerald-600"
-                    : "text-neutral-900"
-              }`}
-            >
-              {subtotal === 0
-                ? "0 đ"
-                : shippingFee === 0
-                  ? "Miễn phí"
-                  : formatPrice(shippingFee)}
-            </span>
+            <span>Tính tại trang thanh toán</span>
           </div>
 
           {voucherDiscount > 0 && (

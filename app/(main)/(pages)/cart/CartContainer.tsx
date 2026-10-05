@@ -90,7 +90,7 @@ export default function CartContainer() {
         ) : (
           <div className="grid grid-cols-1 gap-8 lg:grid-cols-12">
             <div className="space-y-4 lg:col-span-8">
-              <FreeshipProcess subtotal={subtotal} />
+              {/* <FreeshipProcess subtotal={subtotal} /> */}
 
               <SelectItems
                 totalCount={availableItems.length}
