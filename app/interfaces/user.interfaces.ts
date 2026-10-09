@@ -17,7 +17,14 @@ export interface User {
   id: string;
   fullName: string;
   email: string;
+  phone?: string;
   avatar?: string;
+  slug?: string;
+  isActive?: boolean;
+  isEmailVerified?: boolean;
+  isVerifiedSeller?: boolean;
+  sellerRole?: string;
+  sellerRating?: number;
   address?: AddressData[];
 }
 

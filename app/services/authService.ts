@@ -2,7 +2,11 @@
 
 // interface
 import { ApiRes } from "@/app/interfaces/apiRes.interfaces";
-import { AddressData, AuthResponse } from "@/app/interfaces/user.interfaces";
+import {
+  AddressData,
+  AuthResponse,
+  User,
+} from "@/app/interfaces/user.interfaces";
 
 // validates
 import {
@@ -59,5 +63,41 @@ export const authService = {
       console.error("Lỗi khi thêm địa chỉ:", err);
       throw err;
     }
+  },
+
+  getProfile: async (): Promise<{ data: User }> => {
+    return await http.get<{ data: User }>("/user/profile");
+  },
+
+  updateProfile: async (data: Partial<User>): Promise<ApiRes<User>> => {
+    try {
+      const res = await http.patch<ApiRes<User>>("/user/update-profile", data);
+      return res;
+    } catch (error) {
+      console.error("Lỗi cập nhật Profile:", error);
+      throw error;
+    }
+  },
+
+  requestChangePasswordOtp: async (
+    currentPassword: string,
+  ): Promise<ApiRes<null>> => {
+    return await http.post("/user/password/request-change-otp", {
+      currentPassword,
+    });
+  },
+
+  verifyChangePasswordOtp: async (
+    otp: string,
+  ): Promise<ApiRes<{ actionToken: string }>> => {
+    return await http.post("/user/password/verify-change-otp", { otp });
+  },
+
+  executeChangePassword: async (data: {
+    actionToken: string;
+    newPassword: string;
+    confirmPassword: string;
+  }): Promise<ApiRes<null>> => {
+    return await http.patch("/user/password/change", data);
   },
 };

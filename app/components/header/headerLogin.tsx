@@ -114,14 +114,20 @@ export default function HeaderLogin() {
               <DropdownMenuSeparator />
 
               <DropdownMenuGroup>
-                <DropdownMenuItem className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Hồ sơ cá nhân</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="cursor-pointer">
-                  <ShoppingBag className="mr-2 h-4 w-4" />
-                  <span>Đơn mua của tôi</span>
-                </DropdownMenuItem>
+                <Link href="/user?tab=settings">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Hồ sơ cá nhân</span>
+                  </DropdownMenuItem>
+                </Link>
+
+                <Link href="/user?tab=orders">
+                  <DropdownMenuItem className="cursor-pointer">
+                    <ShoppingBag className="mr-2 h-4 w-4" />
+                    <span>Đơn mua của tôi</span>
+                  </DropdownMenuItem>
+                </Link>
+
                 <DropdownMenuItem className="cursor-pointer">
                   <Store className="mr-2 h-4 w-4" />
                   <span>Quản lý Shop</span>
