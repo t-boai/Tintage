@@ -100,4 +100,23 @@ export const authService = {
   }): Promise<ApiRes<null>> => {
     return await http.patch("/user/password/change", data);
   },
+
+  getAvatarSignature: async (): Promise<
+    ApiRes<{
+      signature: string;
+      timestamp: number;
+      folder: string;
+      apiKey: string;
+      cloudName: string;
+    }>
+  > => {
+    return await http.get("/user/avatar/signature");
+  },
+
+  updateAvatar: async (data: {
+    avatarUrl: string;
+    avatarPublicId: string;
+  }): Promise<ApiRes<{ avatar: string }>> => {
+    return await http.patch("/user/avatar", data);
+  },
 };
