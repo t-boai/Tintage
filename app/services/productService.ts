@@ -10,13 +10,21 @@ import { http } from "@/lib/httpClient";
 export const productService = {
   getDetailBySlug: async (slug: string): Promise<ProductItem | null> => {
     try {
-      const res = await http.get<ApiRes<ProductItem>>(
-        `/product/detail/${slug}`,
-        {
-          next: { revalidate: 3600, tags: [`product-${slug}`] },
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      const res = await fetch(`${baseUrl}/product/detail/${slug}`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        next: {
+          revalidate: 3600,
+          tags: [`product-${slug}`],
         },
-      );
-      return res?.data || null;
+      });
+
+      if (!res.ok) return null;
+
+      const responseData = (await res.json()) as ApiRes<ProductItem>;
+      return responseData?.data || null;
     } catch (error) {
       console.error(`productService - Lỗi tải chi tiết SP [${slug}]:`, error);
       return null;

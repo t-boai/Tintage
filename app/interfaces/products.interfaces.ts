@@ -25,6 +25,7 @@ export interface ProductItem {
   condition?: string;
   size?: string;
   isNew?: boolean;
+  isActive: boolean;
   image: string;
   images?: string[];
   description: string;
