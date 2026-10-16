@@ -12,15 +12,15 @@ import {
   Plus,
   Loader2,
   ImageIcon,
-  TrendingUp,
   AlertCircle,
-  Copy,
   Trash2,
   Tag,
   ChevronLeft,
   ChevronRight,
   BarChart3,
   Camera,
+  X,
+  UploadCloud,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -64,8 +64,42 @@ import {
 } from "@/app/services/sellerService";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import z from "zod";
+
+type ImageDisplayItem =
+  | { type: "existing"; url: string; publicId: string }
+  | { type: "new"; file: File; previewUrl: string };
+
+const extractPublicIdFromUrl = (url: string): string => {
+  try {
+    const parts = url.split("/upload/");
+    if (parts.length < 2) return "legacy_image";
+
+    const pathAfterUpload = parts[1].replace(/^v\d+\//, "");
+
+    const lastDotIndex = pathAfterUpload.lastIndexOf(".");
+    return lastDotIndex !== -1
+      ? pathAfterUpload.substring(0, lastDotIndex)
+      : pathAfterUpload;
+  } catch {
+    return "legacy_image";
+  }
+};
+
+const clientProductSchema = z.object({
+  name: z.string().trim().min(1, "Tên sản phẩm không được để trống"),
+  price: z.number().min(0, "Giá bán không được nhỏ hơn 0"),
+  originalPrice: z.number().min(0).optional(),
+  stock: z.number().int().min(0, "Tồn kho không được âm"),
+  totalImagesCount: z
+    .number()
+    .min(1, "Sản phẩm phải có ít nhất 1 ảnh")
+    .max(9, "Tối đa được tải lên 9 ảnh"),
+});
 
 export default function SellingTab() {
+  const router = useRouter();
+
   const [products, setProducts] = React.useState<SellerProduct[]>([]);
   const [counters, setCounters] = React.useState<SellerCounters>({
     all: 0,
@@ -81,7 +115,6 @@ export default function SellingTab() {
   const limit = 10;
 
   const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
-
   const [searchQuery, setSearchQuery] = React.useState("");
   const [debouncedSearch, setDebouncedSearch] = React.useState("");
 
@@ -99,7 +132,32 @@ export default function SellingTab() {
     stock: 0,
   });
 
-  const router = useRouter();
+  const [displayImages, setDisplayImages] = React.useState<ImageDisplayItem[]>(
+    [],
+  );
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const displayImagesRef = React.useRef(displayImages);
+
+  React.useEffect(() => {
+    displayImagesRef.current = displayImages;
+  }, [displayImages]);
+
+  React.useEffect(() => {
+    return () => {
+      displayImagesRef.current.forEach((img) => {
+        if (img.type === "new") URL.revokeObjectURL(img.previewUrl);
+      });
+    };
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      displayImagesRef.current.forEach((img) => {
+        if (img.type === "new") URL.revokeObjectURL(img.previewUrl);
+      });
+    };
+  }, []);
 
   React.useEffect(() => {
     const handler = setTimeout(() => {
@@ -127,6 +185,7 @@ export default function SellingTab() {
           setTotalPages(res.data.pagination.totalPages || 1);
         }
       } catch (error: unknown) {
+        console.log("Lỗi tải danh sách sản phẩm: ", error);
         if (isMounted)
           toast.add({
             type: "error",
@@ -182,6 +241,7 @@ export default function SellingTab() {
       triggerRefresh();
       router.refresh();
     } catch (error) {
+      console.log("Lỗi handleToggleActive: ", error);
       setProducts((prev) =>
         prev.map((p) =>
           p._id === productId ? { ...p, isActive: currentStatus } : p,
@@ -228,9 +288,23 @@ export default function SellingTab() {
 
       setSelectedIds([]);
       triggerRefresh();
+      router.refresh();
     } catch (error) {
+      console.log("Lỗi ở hàm handleBulkAction: ", error);
       setProducts(originalProducts);
       toast.add({ type: "error", description: "Lỗi cập nhật hàng loạt." });
+    }
+  };
+
+  const handleCloseSheet = (open: boolean) => {
+    if (!open) {
+      displayImages.forEach((img) => {
+        if (img.type === "new") URL.revokeObjectURL(img.previewUrl);
+      });
+      setDisplayImages([]);
+      setIsSheetOpen(false);
+    } else {
+      setIsSheetOpen(true);
     }
   };
 
@@ -242,23 +316,143 @@ export default function SellingTab() {
       originalPrice: product.originalPrice,
       stock: product.stock,
     });
+
+    const initialImages: ImageDisplayItem[] = product.images.map((img) => {
+      const url = typeof img === "string" ? img : img.url;
+      const publicId =
+        typeof img === "string"
+          ? extractPublicIdFromUrl(img)
+          : img.publicId || extractPublicIdFromUrl(url);
+
+      return {
+        type: "existing",
+        url,
+        publicId,
+      };
+    });
+
+    setDisplayImages(initialImages);
     setIsSheetOpen(true);
+  };
+
+  const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    if (displayImages.length + files.length > 9) {
+      toast.add({
+        type: "error",
+        description: "Chỉ được phép tải lên tối đa 9 hình ảnh.",
+      });
+      return;
+    }
+
+    const newItems: ImageDisplayItem[] = files.map((file) => ({
+      type: "new",
+      file,
+      previewUrl: URL.createObjectURL(file),
+    }));
+
+    setDisplayImages((prev) => [...prev, ...newItems]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleRemoveImage = (indexToRemove: number) => {
+    setDisplayImages((prev) => {
+      const item = prev[indexToRemove];
+      if (item.type === "new") URL.revokeObjectURL(item.previewUrl);
+      return prev.filter((_, i) => i !== indexToRemove);
+    });
   };
 
   const handleSaveProduct = async () => {
     if (!editingProduct) return;
+
+    const validationResult = clientProductSchema.safeParse({
+      name: editForm.name,
+      price: editForm.price,
+      originalPrice: editForm.originalPrice,
+      stock: editForm.stock,
+      totalImagesCount: displayImages.length,
+    });
+
+    if (!validationResult.success) {
+      const firstError =
+        validationResult.error.issues[0]?.message || "Dữ liệu không hợp lệ";
+      toast.add({ type: "error", description: firstError });
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await sellerService.updateProduct(editingProduct._id, editForm);
+      const filesToUpload = displayImages
+        .filter((img) => img.type === "new")
+        .map(
+          (img) =>
+            (img as { type: "new"; file: File; previewUrl: string }).file,
+        );
+
+      let newUploadedData: { url: string; publicId: string }[] = [];
+
+      if (filesToUpload.length > 0) {
+        const sigRes = await sellerService.getProductUploadSignature();
+        if (!sigRes.data) throw new Error("Lỗi xác thực tải ảnh");
+
+        const { signature, timestamp, folder, apiKey, cloudName, tags } =
+          sigRes.data;
+
+        const uploadPromises = filesToUpload.map(async (file) => {
+          const formData = new FormData();
+          formData.append("file", file);
+          formData.append("signature", signature);
+          formData.append("timestamp", String(timestamp));
+          formData.append("folder", folder);
+          formData.append("api_key", apiKey);
+          if (tags) {
+            const tagsString = Array.isArray(tags) ? tags.join(",") : tags;
+            formData.append("tags", tagsString);
+          }
+
+          const cloudRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+            { method: "POST", body: formData },
+          );
+          const data = await cloudRes.json();
+          if (!cloudRes.ok) throw new Error(data.error?.message);
+          return { url: data.secure_url, publicId: data.public_id };
+        });
+
+        newUploadedData = await Promise.all(uploadPromises);
+      }
+
+      let uploadIndex = 0;
+      const finalImages = displayImages.map((img) => {
+        if (img.type === "existing")
+          return { url: img.url, publicId: img.publicId };
+        return newUploadedData[uploadIndex++];
+      });
+
+      const payload: UpdateProductPayload = {
+        ...editForm,
+        images: finalImages,
+      };
+
+      await sellerService.updateProduct(editingProduct._id, payload);
       toast.add({
         type: "success",
         description: "Cập nhật sản phẩm thành công.",
       });
-      setIsSheetOpen(false);
+
+      handleCloseSheet(false); // 🛡️ Đóng và dọn dẹp RAM an toàn
       triggerRefresh();
+
       router.refresh();
-    } catch (error) {
-      toast.add({ type: "error", description: "Lỗi cập nhật sản phẩm." });
+    } catch (error: unknown) {
+      const err = error as Error;
+      toast.add({
+        type: "error",
+        description: err.message || "Lỗi cập nhật sản phẩm.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -269,12 +463,11 @@ export default function SellingTab() {
       style: "currency",
       currency: "VND",
     }).format(amount);
+
   const getDiscountPercent = (price: number, original: number) => {
     if (!original || price >= original) return 0;
     return Math.round((1 - price / original) * 100);
   };
-
-  console.log(products);
 
   return (
     <div className="animate-in fade-in slide-in-from-bottom-4 space-y-6 pb-10 duration-500">
@@ -327,10 +520,11 @@ export default function SellingTab() {
                   </TabsTrigger>
                 ))}
               </TabsList>
-
-              <Button className="hidden h-10 rounded-xl bg-(--primaryCus) px-4 font-bold text-white shadow-sm hover:bg-(--primaryCus)/90 sm:flex">
-                <Plus size={16} className="mr-2" /> Thêm sản phẩm
-              </Button>
+              <Link href="/user/products/create">
+                <Button className="hidden h-10 rounded-xl bg-(--primaryCus) px-4 font-bold text-white shadow-sm hover:bg-(--primaryCus)/90 sm:flex">
+                  <Plus size={16} className="mr-2" /> Thêm sản phẩm
+                </Button>
+              </Link>
             </div>
           </div>
 
@@ -379,7 +573,7 @@ export default function SellingTab() {
           </div>
 
           <div className="overflow-x-auto">
-            <Table className="min-w-[800px]">
+            <Table className="min-w-200">
               <TableHeader className="bg-white">
                 <TableRow className="border-neutral-100 hover:bg-transparent">
                   <TableHead className="w-12 pl-6">
@@ -392,7 +586,7 @@ export default function SellingTab() {
                       className="border-neutral-300 data-[state=checked]:border-(--primaryCus) data-[state=checked]:bg-(--primaryCus)"
                     />
                   </TableHead>
-                  <TableHead className="w-[350px] font-bold text-neutral-600">
+                  <TableHead className="w-87.5 font-bold text-neutral-600">
                     Sản phẩm
                   </TableHead>
                   <TableHead className="font-bold text-neutral-600">
@@ -409,6 +603,7 @@ export default function SellingTab() {
                   </TableHead>
                 </TableRow>
               </TableHeader>
+
               <TableBody>
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
@@ -420,21 +615,21 @@ export default function SellingTab() {
                         <div className="flex gap-3">
                           <Skeleton className="h-14 w-14 rounded-lg" />
                           <div className="space-y-2">
-                            <Skeleton className="h-4 w-[200px]" />
-                            <Skeleton className="h-3 w-[100px]" />
+                            <Skeleton className="h-4 w-50" />
+                            <Skeleton className="h-3 w-25" />
                           </div>
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-2">
-                          <Skeleton className="h-4 w-[80px]" />
-                          <Skeleton className="h-3 w-[60px]" />
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-3 w-15" />
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-2">
-                          <Skeleton className="h-4 w-[60px]" />
-                          <Skeleton className="h-3 w-[50px]" />
+                          <Skeleton className="h-4 w-15" />
+                          <Skeleton className="h-3 w-12.5" />
                         </div>
                       </TableCell>
                       <TableCell align="center">
@@ -513,13 +708,6 @@ export default function SellingTab() {
                                 {product.name}
                               </span>
                               <div className="flex items-center gap-2">
-                                <span className="text-[11px] font-medium text-neutral-400">
-                                  ID:{" "}
-                                  {product._id
-                                    .substring(product._id.length - 8)
-                                    .toUpperCase()}
-                                </span>
-                                <span className="h-1 w-1 rounded-full bg-neutral-300" />
                                 <span className="flex items-center text-[10px] font-bold tracking-wider text-neutral-500 uppercase">
                                   <Tag size={10} className="mr-1" />{" "}
                                   {product.category || "Khác"}
@@ -552,11 +740,8 @@ export default function SellingTab() {
                         <TableCell>
                           <div className="flex flex-col gap-1.5">
                             {product.stock > 0 ? (
-                              <span className="text-sm font-bold text-neutral-900">
+                              <span className="text-center text-sm font-bold text-neutral-900">
                                 {product.stock}{" "}
-                                <span className="text-xs font-normal text-neutral-500">
-                                  có sẵn
-                                </span>
                               </span>
                             ) : (
                               <Badge
@@ -567,13 +752,6 @@ export default function SellingTab() {
                                 hàng
                               </Badge>
                             )}
-                            <span className="flex items-center text-[11px] font-medium text-neutral-500">
-                              <TrendingUp
-                                size={12}
-                                className="mr-1 text-emerald-500"
-                              />{" "}
-                              Đã bán: {product.salesCount}
-                            </span>
                           </div>
                         </TableCell>
 
@@ -672,7 +850,7 @@ export default function SellingTab() {
         </Tabs>
       </div>
 
-      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+      <Sheet open={isSheetOpen} onOpenChange={handleCloseSheet}>
         <SheetContent className="w-full overflow-y-auto rounded-l-3xl border-l-0 bg-white p-0 shadow-2xl sm:max-w-md">
           <SheetHeader className="sticky top-0 z-10 border-b border-neutral-100 bg-neutral-50/50 p-6 backdrop-blur-md">
             <SheetTitle className="text-xl font-black">
@@ -769,28 +947,58 @@ export default function SellingTab() {
             </div>
 
             <div className="space-y-4 pt-4">
-              <div className="flex items-center gap-2 border-b border-neutral-100 pb-2">
-                <Camera className="h-4 w-4 text-(--primaryCus)" />
-                <h3 className="text-sm font-bold text-neutral-900">Hình ảnh</h3>
+              <div className="flex items-center justify-between border-b border-neutral-100 pb-2">
+                <div className="flex items-center gap-2">
+                  <Camera className="h-4 w-4 text-(--primaryCus)" />
+                  <h3 className="text-sm font-bold text-neutral-900">
+                    Hình ảnh ({displayImages.length}/9)
+                  </h3>
+                </div>
               </div>
-              <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-2">
-                {editingProduct?.images.map((img, i) => {
-                  const imageUrl = typeof img === "string" ? img : img.url;
-                  return (
-                    <div
-                      key={i}
-                      className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-neutral-200"
+
+              <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+                {displayImages.map((img, i) => (
+                  <div
+                    key={i}
+                    className="group relative aspect-square shrink-0 overflow-hidden rounded-xl border border-neutral-200"
+                  >
+                    <Image
+                      src={img.type === "existing" ? img.url : img.previewUrl}
+                      alt={`img-${i}`}
+                      fill
+                      className="object-cover transition-transform group-hover:scale-105"
+                      unoptimized
+                    />
+                    <button
+                      onClick={() => handleRemoveImage(i)}
+                      className="absolute top-1 right-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/50 text-white opacity-0 backdrop-blur-sm transition-opacity group-hover:opacity-100 hover:bg-red-500"
                     >
-                      <Image
-                        src={imageUrl}
-                        alt={`img-${i}`}
-                        fill
-                        className="object-cover"
-                        unoptimized
-                      />
-                    </div>
-                  );
-                })}
+                      <X size={14} />
+                    </button>
+                    {i === 0 && (
+                      <span className="absolute bottom-0 left-0 w-full bg-(--primaryCus)/90 py-1 text-center text-[9px] font-bold tracking-widest text-white uppercase backdrop-blur-md">
+                        Ảnh bìa
+                      </span>
+                    )}
+                  </div>
+                ))}
+
+                {displayImages.length < 9 && (
+                  <label className="flex aspect-square cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-neutral-200 bg-neutral-50 transition-colors hover:border-(--primaryCus) hover:bg-red-50/50">
+                    <UploadCloud className="h-6 w-6 text-neutral-400" />
+                    <span className="text-[10px] font-bold text-neutral-500">
+                      Thêm ảnh
+                    </span>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      className="hidden"
+                      ref={fileInputRef}
+                      onChange={handleAddImages}
+                    />
+                  </label>
+                )}
               </div>
             </div>
           </div>
@@ -798,7 +1006,7 @@ export default function SellingTab() {
           <SheetFooter className="sticky bottom-0 z-10 border-t border-neutral-100 bg-neutral-50/50 p-6">
             <Button
               variant="outline"
-              onClick={() => setIsSheetOpen(false)}
+              onClick={() => handleCloseSheet(false)}
               className="h-11 rounded-xl bg-white font-bold"
             >
               Hủy bỏ

@@ -48,6 +48,28 @@ export interface UpdateProductPayload {
   images?: { url: string; publicId: string }[];
 }
 
+export interface CreateProductPayload {
+  name: string;
+  brand: string;
+  category?: string;
+  price: number;
+  originalPrice?: number;
+  stock: number;
+  condition: number;
+  gender: string;
+  size?: string;
+  colors: string[];
+  material?: string;
+  description?: string;
+  isActive: boolean;
+  images: { url: string; publicId: string }[];
+}
+
+export interface CreateProductResponse {
+  _id: string;
+  slug: string;
+}
+
 export const sellerService = {
   getProducts: async ({
     tab,
@@ -73,5 +95,25 @@ export const sellerService = {
     data: UpdateProductPayload,
   ): Promise<ApiRes<null>> => {
     return await http.patch<ApiRes<null>>(`/seller/products/${id}`, data);
+  },
+
+  getProductUploadSignature: async (): Promise<
+    ApiRes<{
+      signature: string;
+      timestamp: number;
+      folder: string;
+      apiKey: string;
+      cloudName: string;
+      tags: string;
+      maxFileSize: string;
+    }>
+  > => {
+    return await http.get("/seller/products/upload-signature");
+  },
+
+  createProduct: async (
+    payload: CreateProductPayload,
+  ): Promise<ApiRes<CreateProductResponse>> => {
+    return await http.post("/seller/create-seller-product", payload);
   },
 };
