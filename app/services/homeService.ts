@@ -12,10 +12,8 @@ import { http } from "@/lib/httpClient";
 export const homeService = {
   getSlides: async (): Promise<SlideItem[]> => {
     const res = await http.get<ApiRes<SlideItem[]>>("/home/slide", {
-      // Cấu hình Caching cho Next.js Server Component (Revalidate sau 1 tiếng)
       next: { revalidate: 3600 },
     });
-
     return res?.data || [];
   },
 
@@ -23,24 +21,47 @@ export const homeService = {
     const res = await http.get<ApiRes<CategoriesItem[]>>("/home/categories", {
       next: { revalidate: 3600 },
     });
-
     return res?.data || [];
   },
 
   getProductsFeatured: async (): Promise<ProductItem[]> => {
-    const res = await http.get<ApiRes<ProductItem[]>>(
-      "/home/products-featured",
-      { next: { revalidate: 1800, tags: ["home-products"] } },
-    );
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
-    return res.data || [];
+      const res = await fetch(`${baseUrl}/home/products-featured`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        next: { revalidate: 1800, tags: ["home-products"] },
+      });
+
+      if (!res.ok) return [];
+
+      const responseData = (await res.json()) as ApiRes<ProductItem[]>;
+      return responseData?.data || [];
+    } catch (error) {
+      console.error("Lỗi lấy sản phẩm nổi bật:", error);
+      return [];
+    }
   },
 
   getDailyDiscover: async (): Promise<ProductItem[]> => {
-    const res = await http.get<ApiRes<ProductItem[]>>("/home/daily-discover", {
-      next: { revalidate: 1800, tags: ["home-products"] },
-    });
-    return res?.data || [];
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      const res = await fetch(`${baseUrl}/home/daily-discover`, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        next: { revalidate: 1800, tags: ["home-products"] },
+      });
+
+      if (!res.ok) return [];
+
+      const responseData = (await res.json()) as ApiRes<ProductItem[]>;
+      return responseData?.data || [];
+    } catch (error) {
+      console.error("Lỗi lấy khám phá hàng ngày:", error);
+      return [];
+    }
   },
 
   getBlogs: async (): Promise<BlogsItem[]> => {

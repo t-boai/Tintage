@@ -15,6 +15,7 @@ import {
 // Interfaces & Helpers
 import { ProductItem } from "@/app/interfaces/products.interfaces";
 import { formatPrice } from "@/app/helper/format-price";
+import { getSafeImageUrl } from "@/app/helper/get-safe-image-url.helper";
 
 // Shadcn UI
 import { Badge } from "@/components/ui/badge";
@@ -94,6 +95,9 @@ const ProductCard = ({ product }: { product: ProductItem }) => {
 
   const isOutOfStock = product.stock === 0;
 
+  const safeThumbnail = getSafeImageUrl(product.image);
+  const safeSellerAvatar = getSafeImageUrl(product.seller?.avatar);
+
   return (
     <Link
       href={`/products/${product.slug || "#"}`}
@@ -101,7 +105,7 @@ const ProductCard = ({ product }: { product: ProductItem }) => {
     >
       <div className="relative aspect-square w-full overflow-hidden bg-[#F5F5F5]">
         <Image
-          src={product.image || "/placeholder-image.png"}
+          src={safeThumbnail}
           alt={product.name || "Sản phẩm Tintage"}
           decoding="async"
           fill
@@ -109,6 +113,7 @@ const ProductCard = ({ product }: { product: ProductItem }) => {
           className={`object-cover transition-transform duration-700 group-hover:scale-110 ${
             isOutOfStock ? "opacity-50 grayscale" : ""
           }`}
+          unoptimized
         />
 
         {isOutOfStock && (
@@ -226,11 +231,12 @@ const ProductCard = ({ product }: { product: ProductItem }) => {
               <div className="flex items-center gap-1.5">
                 <div className="relative h-4 w-4 shrink-0 overflow-hidden rounded-full bg-neutral-200 shadow-inner">
                   <Image
-                    src={product.seller.avatar || "/placeholder-image.png"}
+                    src={safeSellerAvatar}
                     alt={product.seller.fullName}
                     fill
                     sizes="16px"
                     className="object-cover"
+                    unoptimized
                   />
                 </div>
 

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 
 // helpers & interfaces
 import { formatPrice } from "@/app/helper/format-price";
+import { getSafeImageUrl } from "@/app/helper/get-safe-image-url.helper";
 import { CartItem } from "@/app/interfaces/cart.interfaces";
 
 interface CartItemCardProps {
@@ -46,9 +47,13 @@ export default function CartItemCardComponent({
     return `${m}:${s}`;
   };
 
+  const safeImageUrl = getSafeImageUrl(product.image);
+
   return (
     <div
-      className={`relative flex flex-col gap-4 bg-white transition-all sm:flex-row sm:items-start ${isSelected ? "bg-red-50/30" : ""} ${!isAvailable && !isPendingReserve ? "opacity-60 grayscale-20" : ""}`}
+      className={`relative flex flex-col gap-4 bg-white transition-all sm:flex-row sm:items-start ${
+        isSelected ? "bg-red-50/30" : ""
+      } ${!isAvailable && !isPendingReserve ? "opacity-60 grayscale-20" : ""}`}
     >
       <div className="pt-2 sm:pt-4">
         <Checkbox
@@ -61,16 +66,21 @@ export default function CartItemCardComponent({
 
       <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-neutral-100 bg-neutral-50 sm:h-28 sm:w-28">
         <Image
-          src={product.image || "/placeholder-image.png"}
+          src={safeImageUrl}
           alt={product.name || "Sản phẩm"}
           fill
           sizes="(max-width: 640px) 96px, 112px"
           className="object-cover"
+          unoptimized
         />
         {!isAvailable && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
             <Badge
-              className={`px-2 py-0.5 text-center text-[10px] leading-tight text-white ${isPendingReserve ? "bg-orange-500 shadow-md hover:bg-orange-500" : "bg-black/90 hover:bg-black/90"}`}
+              className={`px-2 py-0.5 text-center text-[10px] leading-tight text-white ${
+                isPendingReserve
+                  ? "bg-orange-500 shadow-md hover:bg-orange-500"
+                  : "bg-black/90 hover:bg-black/90"
+              }`}
             >
               {isPendingReserve
                 ? "ĐANG GIỮ CHỖ"
@@ -89,7 +99,13 @@ export default function CartItemCardComponent({
               </span>
               <Link href={`/products/${product.slug || "#"}`}>
                 <h3
-                  className={`mt-0.5 line-clamp-2 text-sm leading-snug font-bold transition-colors hover:text-(--primaryCus) ${!isAvailable ? (isPendingReserve ? "text-orange-700" : "text-neutral-500") : "text-neutral-900"}`}
+                  className={`mt-0.5 line-clamp-2 text-sm leading-snug font-bold transition-colors hover:text-(--primaryCus) ${
+                    !isAvailable
+                      ? isPendingReserve
+                        ? "text-orange-700"
+                        : "text-neutral-500"
+                      : "text-neutral-900"
+                  }`}
                 >
                   {product.name}
                 </h3>
@@ -98,7 +114,11 @@ export default function CartItemCardComponent({
 
             <div className="text-right">
               <span
-                className={`block text-base font-black ${!isAvailable && !isPendingReserve ? "text-neutral-400 line-through" : "text-neutral-900"}`}
+                className={`block text-base font-black ${
+                  !isAvailable && !isPendingReserve
+                    ? "text-neutral-400 line-through"
+                    : "text-neutral-900"
+                }`}
               >
                 {formatPrice(product.price)}
               </span>
@@ -156,7 +176,9 @@ export default function CartItemCardComponent({
             </div>
           ) : (
             <span
-              className={`text-xs font-bold ${isPendingReserve ? "text-orange-600" : "text-red-500"}`}
+              className={`text-xs font-bold ${
+                isPendingReserve ? "text-orange-600" : "text-red-500"
+              }`}
             >
               {isPendingReserve
                 ? `Còn lại: ${formatTime(timeLeft)}`

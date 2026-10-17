@@ -25,6 +25,7 @@ import { cartService } from "@/app/services/cartService";
 
 // Interfaces & Helpers
 import { formatPrice } from "@/app/helper/format-price";
+import { getSafeImageUrl } from "@/app/helper/get-safe-image-url.helper";
 import { CartItem } from "@/app/interfaces/cart.interfaces";
 import {
   Tooltip,
@@ -81,7 +82,6 @@ export default function HeaderCartHover({ count }: Props) {
     if (!isAuthenticated) {
       e.preventDefault();
       dispatch(openAuthModal("login"));
-
       return;
     }
 
@@ -235,9 +235,10 @@ export default function HeaderCartHover({ count }: Props) {
                     const id = productData.id || `fallback-${index}`;
                     const name = productData.name || "Sản phẩm";
                     const price = productData.price || 0;
-                    const image = productData.image || "/placeholder-image.png";
                     const isAvailable = item.isAvailable;
                     const slug = productData.slug || "#";
+
+                    const safeImageSrc = getSafeImageUrl(productData.image);
 
                     return (
                       <Link
@@ -249,13 +250,14 @@ export default function HeaderCartHover({ count }: Props) {
                       >
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
                           <Image
-                            src={image}
+                            src={safeImageSrc}
                             alt={name}
                             fill
                             sizes="56px"
                             className={`object-cover ${
                               !isAvailable ? "opacity-50 grayscale" : ""
                             }`}
+                            unoptimized
                           />
                           {!isAvailable && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/40">

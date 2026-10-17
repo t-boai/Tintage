@@ -1,6 +1,5 @@
 import {
   ApiRes,
-  PaginationData,
   RecommendationParams,
   SearchProductsParams,
 } from "@/app/interfaces/apiRes.interfaces";
@@ -37,22 +36,28 @@ export const productService = {
     params?: RecommendationParams,
   ) => {
     try {
-      type HttpOptions = Parameters<typeof http.get>[1];
-      const cacheConfig: HttpOptions =
-        page === 1 ? { next: { revalidate: 3600 } } : { cache: "no-store" };
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL;
+      let queryUrl = `${baseUrl}/product/recommendations?page=${page}&limit=${limit}`;
 
-      let queryUrl = `/product/recommendations?page=${page}&limit=${limit}`;
       if (params?.categoryId) queryUrl += `&categoryId=${params.categoryId}`;
       if (params?.sellerId) queryUrl += `&sellerId=${params.sellerId}`;
       if (params?.excludeId) queryUrl += `&excludeId=${params.excludeId}`;
 
-      const res = await http.get<
-        ApiRes<ProductItem[]> & { pagination: PaginationData }
-      >(queryUrl, cacheConfig);
+      const res = await fetch(queryUrl, {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+        next:
+          page === 1
+            ? { revalidate: 3600, tags: ["home-products"] }
+            : { revalidate: 0 },
+      });
 
+      if (!res.ok) return { data: [], pagination: null };
+
+      const responseData = await res.json();
       return {
-        data: res?.data || [],
-        pagination: res?.pagination || null,
+        data: responseData?.data || [],
+        pagination: responseData?.pagination || null,
       };
     } catch (error) {
       console.error("productService - Lỗi tải gợi ý:", error);

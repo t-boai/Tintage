@@ -28,6 +28,7 @@ import { ProductItem } from "@/app/interfaces/products.interfaces";
 
 // helper
 import { formatPrice } from "@/app/helper/format-price";
+import { getSafeImageUrl } from "@/app/helper/get-safe-image-url.helper";
 
 // component
 import HeaderHeartListItemSkeleton from "@/app/components/skeleton/HeaderHeartListItemSkeleton";
@@ -58,12 +59,12 @@ export default function HeaderHeartListHover({ count }: Props) {
   const [page, setPage] = React.useState(1);
   const [hasMore, setHasMore] = React.useState(true);
 
-  const [isInitialLoading, setIsInitialLoading] = React.useState(false); // Dùng cho Skeleton
-  const [isFetchingMore, setIsFetchingMore] = React.useState(false); // Dùng cho Spinner cuộn trang
+  const [isInitialLoading, setIsInitialLoading] = React.useState(false);
+  const [isFetchingMore, setIsFetchingMore] = React.useState(false);
 
   const observerTarget = React.useRef<HTMLDivElement>(null);
 
-  // Biến lưu vết (CACHE TRACKING): Theo dõi xem số lượng tim có thay đổi không
+  // Biến lưu vết (CACHE TRACKING)
   const prevCountRef = React.useRef(-1);
 
   const fetchHeartlist = React.useCallback(async (targetPage: number) => {
@@ -89,12 +90,11 @@ export default function HeaderHeartListHover({ count }: Props) {
 
   const handleOpenChange = (open: boolean) => {
     if (open && isAuthenticated) {
-      // Chỉ gọi api khi: Chưa có data hoặc user vừa thêm/xóa tim ở ngoài trang chủ
       if (items.length === 0 || count !== prevCountRef.current) {
         setPage(1);
         setHasMore(true);
         fetchHeartlist(1);
-        prevCountRef.current = count; // Lưu vết lại số lượng hiện tại
+        prevCountRef.current = count;
       }
     }
   };
@@ -130,7 +130,6 @@ export default function HeaderHeartListHover({ count }: Props) {
     setItems((prev) => prev.filter((item) => item.product?.id !== productId));
     dispatch(toggleItem({ id: productId, isLiked: false }));
 
-    // Cập nhật lại số lưu vết ngay lập tức để không bị gọi lại API thừa khi tắt/mở Popover
     prevCountRef.current = count - 1;
 
     toast.add({
@@ -150,7 +149,6 @@ export default function HeaderHeartListHover({ count }: Props) {
     if (!isAuthenticated) {
       e.preventDefault();
       dispatch(openAuthModal("login"));
-    } else {
     }
   };
 
@@ -222,11 +220,11 @@ export default function HeaderHeartListHover({ count }: Props) {
                     const id = productData.id || `fallback-${index}`;
                     const name = productData.name || "Sản phẩm Tintage";
                     const price = productData.price || 0;
-                    const image = productData.image || "/placeholder-image.png";
                     const isOutOfStock = (productData.stock ?? 0) <= 0;
                     const slug = productData.slug || "#";
-
                     const isInCart = !!cartItemMap[id];
+
+                    const safeImageSrc = getSafeImageUrl(productData.image);
 
                     return (
                       <Link
@@ -236,11 +234,12 @@ export default function HeaderHeartListHover({ count }: Props) {
                       >
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-neutral-100">
                           <Image
-                            src={image}
+                            src={safeImageSrc}
                             alt={name}
                             fill
                             sizes="56px"
                             className={`object-cover ${isOutOfStock ? "opacity-50 grayscale" : ""}`}
+                            unoptimized
                           />
                           {isOutOfStock && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/20">
