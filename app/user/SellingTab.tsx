@@ -55,6 +55,16 @@ import {
   SheetTitle,
   SheetFooter,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import {
   sellerService,
@@ -139,17 +149,16 @@ export default function SellingTab() {
 
   const displayImagesRef = React.useRef(displayImages);
 
+  const [deleteState, setDeleteState] = React.useState<{
+    isOpen: boolean;
+    type: "single" | "bulk" | null;
+    productId?: string;
+    productName?: string;
+  }>({ isOpen: false, type: null });
+
   React.useEffect(() => {
     displayImagesRef.current = displayImages;
   }, [displayImages]);
-
-  React.useEffect(() => {
-    return () => {
-      displayImagesRef.current.forEach((img) => {
-        if (img.type === "new") URL.revokeObjectURL(img.previewUrl);
-      });
-    };
-  }, []);
 
   React.useEffect(() => {
     return () => {
@@ -254,14 +263,15 @@ export default function SellingTab() {
     }
   };
 
+  const handleDeleteProduct = (productId: string, productName: string) => {
+    setDeleteState({ isOpen: true, type: "single", productId, productName });
+  };
+
   const handleBulkAction = async (action: "hide" | "show" | "delete") => {
     if (selectedIds.length === 0) return;
 
     if (action === "delete") {
-      toast.add({
-        type: "info",
-        description: "Tính năng xóa hàng loạt đang cập nhật API.",
-      });
+      setDeleteState({ isOpen: true, type: "bulk" });
       return;
     }
 
@@ -293,6 +303,76 @@ export default function SellingTab() {
       console.log("Lỗi ở hàm handleBulkAction: ", error);
       setProducts(originalProducts);
       toast.add({ type: "error", description: "Lỗi cập nhật hàng loạt." });
+    }
+  };
+
+  const executeDelete = async () => {
+    const { type, productId } = deleteState;
+
+    setDeleteState({ isOpen: false, type: null });
+
+    if (type === "single" && productId) {
+      const originalProducts = [...products];
+      setProducts((prev) => prev.filter((p) => p._id !== productId));
+
+      try {
+        await sellerService.deleteProduct(productId);
+        toast.add({
+          type: "success",
+          description: "Đã xóa sản phẩm thành công.",
+        });
+        triggerRefresh();
+        router.refresh();
+      } catch (error: unknown) {
+        console.log("Lỗi handleDeleteProduct: ", error);
+        setProducts(originalProducts); // Rollback
+
+        let errorMessage = "Không thể xóa sản phẩm lúc này.";
+        if (error instanceof Error) {
+          errorMessage = error.message;
+        } else if (
+          typeof error === "object" &&
+          error !== null &&
+          "response" in error
+        ) {
+          const axiosError = error as Record<string, unknown>;
+          const response = axiosError.response as
+            Record<string, unknown> | undefined;
+          if (response && response.data) {
+            const data = response.data as Record<string, unknown>;
+            if (typeof data.message === "string") errorMessage = data.message;
+          }
+        }
+        toast.add({ type: "error", description: errorMessage });
+      }
+    } else if (type === "bulk") {
+      const originalProducts = [...products];
+      setProducts((prev) => prev.filter((p) => !selectedIds.includes(p._id)));
+
+      try {
+        const results = await Promise.allSettled(
+          selectedIds.map((id) => sellerService.deleteProduct(id)),
+        );
+
+        const successCount = results.filter(
+          (res) => res.status === "fulfilled",
+        ).length;
+        toast.add({
+          type: "success",
+          description: `Đã xóa thành công ${successCount}/${selectedIds.length} sản phẩm.`,
+        });
+
+        setSelectedIds([]);
+        triggerRefresh();
+        router.refresh();
+      } catch (error: unknown) {
+        console.log("Lỗi Xóa Hàng Loạt: ", error);
+        setProducts(originalProducts);
+        toast.add({
+          type: "error",
+          description: "Lỗi kết nối khi xóa sản phẩm.",
+        });
+      }
     }
   };
 
@@ -443,9 +523,8 @@ export default function SellingTab() {
         description: "Cập nhật sản phẩm thành công.",
       });
 
-      handleCloseSheet(false); // 🛡️ Đóng và dọn dẹp RAM an toàn
+      handleCloseSheet(false);
       triggerRefresh();
-
       router.refresh();
     } catch (error: unknown) {
       const err = error as Error;
@@ -803,7 +882,15 @@ export default function SellingTab() {
                                   Thao tác khác
                                 </DropdownMenuLabel>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem className="cursor-pointer py-2.5 font-medium text-red-600 focus:bg-red-50 focus:text-red-600">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleDeleteProduct(
+                                      product._id,
+                                      product.name,
+                                    )
+                                  }
+                                  className="cursor-pointer py-2.5 font-medium text-red-600 focus:bg-red-50 focus:text-red-600"
+                                >
                                   <Trash2 className="mr-2 h-4 w-4" /> Xóa sản
                                   phẩm
                                 </DropdownMenuItem>
@@ -1020,12 +1107,44 @@ export default function SellingTab() {
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 <Edit className="mr-2 h-4 w-4" />
-              )}{" "}
+              )}
               Cập nhật
             </Button>
           </SheetFooter>
         </SheetContent>
       </Sheet>
+
+      <AlertDialog
+        open={deleteState.isOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) setDeleteState({ isOpen: false, type: null });
+        }}
+      >
+        <AlertDialogContent className="rounded-2xl sm:max-w-[425px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertCircle className="h-5 w-5" />
+              Xác nhận xóa sản phẩm
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-sm font-medium text-neutral-600">
+              {deleteState.type === "single"
+                ? `Bạn có chắc chắn muốn xóa sản phẩm "${deleteState.productName}" không? Hệ thống sẽ ẩn sản phẩm này khỏi gian hàng.`
+                : `Bạn đang chọn xóa hàng loạt ${selectedIds.length} sản phẩm. Thao tác này sẽ ẩn tất cả chúng khỏi gian hàng.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-4">
+            <AlertDialogCancel className="h-10 rounded-xl font-bold">
+              Hủy bỏ
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={executeDelete}
+              className="h-10 rounded-xl bg-red-600 font-bold text-white hover:bg-red-700 focus:ring-red-600"
+            >
+              <Trash2 className="mr-2 h-4 w-4" /> Xóa ngay
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

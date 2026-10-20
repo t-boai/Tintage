@@ -116,4 +116,8 @@ export const sellerService = {
   ): Promise<ApiRes<CreateProductResponse>> => {
     return await http.post("/seller/create-seller-product", payload);
   },
+
+  deleteProduct: async (id: string): Promise<ApiRes<null>> => {
+    return await http.delete<ApiRes<null>>(`/seller/products/${id}`);
+  },
 };
